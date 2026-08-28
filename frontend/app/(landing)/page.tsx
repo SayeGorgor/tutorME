@@ -1,8 +1,10 @@
 'use client';
 
-import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { subjects } from "@/constants/subjects";
+import { searchLocations } from "@/lib/api/actions/client-actions";
 
 export default function Home() {
   const router = useRouter();
@@ -10,9 +12,27 @@ export default function Home() {
   const [subject, setSubject] = useState<string>("");
   const [area, setArea] = useState<string>("");
   const [sessionType, setSessionType] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   useEffect(() => {
-  }, []);
+    const timeout = setTimeout(async () => {
+      if(search.trim() === "") {
+        setSearchResults([]);
+        return;
+      }
+      
+      try {
+        const results = await searchLocations(search);
+        setSearchResults(results);
+        console.log("Search results:", results);
+      } catch (error) {
+        console.error("Failed to search locations:", error);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [search]);
   
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -56,7 +76,7 @@ export default function Home() {
 
         <form id="search-tutors-section" className="flex rounded-md w-3/4">
           <label className="flex flex-col flex-2 bg-white rounded-l-md">
-            <span className="ml-4 mt-1 text-gray-600 text-[.8rem]">SUBJECT</span>
+            <span className="ml-3 mt-1 text-gray-600 text-[.8rem]">SUBJECT</span>
             <select 
               id="subject-dropdown" 
               className="appearance-none p-3 bg-white rounded-l-md cursor-pointer"
@@ -72,22 +92,31 @@ export default function Home() {
 
           <div className="w-px h-full bg-gray-400" />
 
-          <label className="flex flex-col flex-2 bg-white">
-            <span className="ml-4 mt-1 text-gray-600 text-[.8rem]">AREA</span>
-            <select 
-              id="area-dropdown" 
-              className="appearance-none p-3 bg-white cursor-pointer"
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-            >
-              <option value="">Atlanta, GA</option>
-            </select>
+          <label className="relative flex flex-col flex-2 bg-white">
+            <span className="ml-3 mt-1 text-gray-600 text-[.8rem]">AREA</span>
+            <div className="flex items-center">
+              <input 
+                id="area-input" 
+                type="text" 
+                placeholder="Atlanta, GA..." 
+                className="p-3 bg-white cursor-pointer"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <Image 
+                src="/icons/search_icon.svg" 
+                alt="Search Icon" 
+                width={30} 
+                height={30} 
+                className="mb-2 mr-5 -translate-x-1/2" 
+              />
+            </div>
           </label>
 
           <div className="w-px h-full bg-gray-400" />
 
           <label className="flex flex-col flex-2 bg-white">
-            <span className="ml-4 mt-1 text-gray-600 text-[.8rem]">SESSION TYPE</span>
+            <span className="ml-3 mt-1 text-gray-600 text-[.8rem]">SESSION TYPE</span>
             <select 
               id="session-dropdown" 
               className="appearance-none p-3 bg-white cursor-pointer"

@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routes import locations
 
 app = FastAPI()
 
@@ -13,5 +14,12 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-@app.get("/"):
-    return {'message': 'FastAPI backend is running successfully!'}
+app.include_router(
+    locations.router,
+    prefix="/api/locations",
+    tags=["locations"]
+)
+
+@app.get("/")
+def root():
+    return {'message': 'TutorME backend is running successfully!'}
