@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { subjects } from "@/constants/subjects";
@@ -8,31 +8,52 @@ import { searchLocations } from "@/lib/api/actions/client-actions";
 
 export default function Home() {
   const router = useRouter();
+  const subjectsBoxRef = useRef<HTMLUListElement>(null);
 
   const [subject, setSubject] = useState<string>("");
   const [area, setArea] = useState<string>("");
   const [sessionType, setSessionType] = useState<string>("");
   const [search, setSearch] = useState<string>("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showSubjectsBox, setShowSubjectsBox] = useState<boolean>(false);
+
+  const [error, setError] = useState<string | null>(null);
+
+  // useEffect(() => {
+  //   const timeout = setTimeout(async () => {
+  //     if(search.trim() === "") {
+  //       setSearchResults([]);
+  //       return;
+  //     }
+      
+  //     try {
+  //       const results = await searchLocations(search);
+  //       setSearchResults(results);
+  //       console.log("Search results:", results);
+  //     } catch (error) {
+  //       console.error("Failed to search locations:", error);
+  //     }
+  //   }, 300);
+
+  //   return () => clearTimeout(timeout);
+  // }, [search]);
 
   useEffect(() => {
-    const timeout = setTimeout(async () => {
-      if(search.trim() === "") {
-        setSearchResults([]);
-        return;
+    const handleClickOutsideSubjectsBox = (event: MouseEvent) => {
+      if (
+        subjectsBoxRef.current && 
+        !subjectsBoxRef.current.contains(event.target as Node)
+      ) {
+        setShowSubjectsBox(false);
       }
-      
-      try {
-        const results = await searchLocations(search);
-        setSearchResults(results);
-        console.log("Search results:", results);
-      } catch (error) {
-        console.error("Failed to search locations:", error);
-      }
-    }, 300);
+    };
+    document.addEventListener("mousedown", handleClickOutsideSubjectsBox);
 
-    return () => clearTimeout(timeout);
-  }, [search]);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideSubjectsBox);
+    };
+  }, []);
+  
   
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,6 +66,27 @@ export default function Home() {
     const queryString = params.toString();
     const searchUrl = `/tutors${queryString ? `?${queryString}` : ""}`;
     router.push(searchUrl);
+  };
+
+  const findTutor = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if(!subject) {
+      setError("Must select a subject.");
+      return;
+    }
+
+    const params = new URLSearchParams();
+    setError(null);
+    params.set("subject", subject);
+    if(area) {
+      params.set("area", area);
+    }
+    if(sessionType) {
+      params.set("sessionType", sessionType);
+    }
+
+    const queryString = params.toString();
+    router.push(`/tutors${queryString ? `?${queryString}` : ""}`);
   };
 
   return (
@@ -75,19 +117,42 @@ export default function Home() {
         </div>
 
         <form id="search-tutors-section" className="flex rounded-md w-3/4">
-          <label className="flex flex-col flex-2 bg-white rounded-l-md">
+          <label className="relative flex flex-col flex-2 bg-white rounded-l-md">
             <span className="ml-3 mt-1 text-gray-600 text-[.8rem]">SUBJECT</span>
-            <select 
+            <input 
               id="subject-dropdown" 
+              type="text"
+              placeholder="Math, Coding, Science..."
               className="appearance-none p-3 bg-white rounded-l-md cursor-pointer"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
+              onFocus={() => setShowSubjectsBox(true)}
+            />
+            <ul
+              id="subjects-box"
+              ref={subjectsBoxRef}
+              className={`absolute -top-78 flex flex-wrap w-180 z-10 bg-white border border-gray-400 rounded-md mt-1 overflow-y-auto ${showSubjectsBox ? 'block' : 'hidden'}`}
             >
-              <option value="">Math, Coding, Science...</option>
               {subjects.map((subject) => (
-                <option key={subject.id} value={subject.id}>{subject.name}</option>
+                <li key={subject.id} className="p-2">
+                  <span className="block text-lg font-semibold">
+                    {subject.name}
+                  </span>
+                  {subject.topics?.map((topic) => (
+                    <button 
+                      key={topic}  
+                      className="block text-md text-gray-500 hover:text-gray-700 cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSubject(topic);
+                      }}
+                    >
+                      {topic}
+                    </button>
+                  ))}
+                </li>
               ))}
-            </select>
+            </ul>
           </label>
 
           <div className="w-px h-full bg-gray-400" />
@@ -132,11 +197,12 @@ export default function Home() {
           <button 
             type="submit" 
             className="flex-1 bg-indigo-500 px-10 rounded-r-md cursor-pointer hover:bg-indigo-600 active:bg-indigo-700"
-            onClick={(e) => e.preventDefault()}
+            onClick={findTutor}
           >
             Find Tutor
           </button>
         </form>
+        {error && <p className="text-red-500 mt-2">{error}</p>}
       </div>
 
       <div id="info-banner" className="flex justify-evenly items-center h-[calc(100vh_-_35rem)] bg-blue-800 text-white mt-2 rounded-md">

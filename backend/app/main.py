@@ -14,11 +14,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-app.include_router(
-    locations.router,
-    prefix="/api/locations",
-    tags=["locations"]
-)
+app.include_router(locations.router)
 
 @app.get("/")
 def root():

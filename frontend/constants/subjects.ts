@@ -10,32 +10,6 @@ export const subjects = [
         ]
     },
     {
-        id: "english",
-        name: "English",
-        topics: [
-            "Grammar",
-            "US Literature",
-        ]
-    },
-    {
-        id: "science",
-        name: "Science",
-        topics: [
-            "Chemistry",
-            "Physics",
-            "Biology",
-        ]
-    },
-    {
-        id: "social-studies",
-        name: "Social Studies",
-        topics: [
-            "US History",
-            "World History",
-            "US Government",
-        ]
-    },
-    {
         id: "coding",
         name: "Coding",
         topics: [
@@ -64,6 +38,32 @@ export const subjects = [
             "ACT Reading/English Prep",
             "ACT Science Prep",
             "ACT Full Prep",
+        ]
+    },
+    {
+        id: "english",
+        name: "English",
+        topics: [
+            "Grammar",
+            "US Literature",
+        ]
+    },
+    {
+        id: "science",
+        name: "Science",
+        topics: [
+            "Chemistry",
+            "Physics",
+            "Biology",
+        ]
+    },
+    {
+        id: "social-studies",
+        name: "Social Studies",
+        topics: [
+            "US History",
+            "World History",
+            "US Government",
         ]
     },
 ] as const;
