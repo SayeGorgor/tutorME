@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+
 import { subjects } from "@/constants/subjects";
+import type { Location } from "@/lib/types";
 import { searchLocations } from "@/lib/api/actions/client-actions";
 
 export default function Home() {
@@ -11,7 +13,8 @@ export default function Home() {
   const subjectsBoxRef = useRef<HTMLUListElement>(null);
 
   const [subject, setSubject] = useState<string>("");
-  const [area, setArea] = useState<string>("");
+  const [area, setArea] = useState<Location | null>({city: "Atlanta", state: "GA", zip: "30301", country: "US", latitude: 33.7490, longitude: -84.3880});
+  const [areaSearch, setAreaSearch] = useState<string>("");
   const [sessionType, setSessionType] = useState<string>("");
   const [search, setSearch] = useState<string>("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -60,7 +63,7 @@ export default function Home() {
     const params = new URLSearchParams();
 
     if(subject) params.set("subject", subject);
-    if(area) params.set("area", area);
+    if(areaSearch) params.set("area", areaSearch);
     if(sessionType) params.set("sessionType", sessionType);
 
     const queryString = params.toString();
@@ -77,10 +80,12 @@ export default function Home() {
 
     const params = new URLSearchParams();
     setError(null);
+
     params.set("subject", subject);
-    if(area) {
-      params.set("area", area);
-    }
+    params.set("city", area?.city || "");
+    params.set("state", area?.state || "");
+    params.set("lat", area?.latitude?.toString() || "");
+    params.set("long", area?.longitude?.toString() || "");
     if(sessionType) {
       params.set("sessionType", sessionType);
     }
@@ -165,8 +170,8 @@ export default function Home() {
                 type="text" 
                 placeholder="Atlanta, GA..." 
                 className="p-3 bg-white cursor-pointer"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                value={areaSearch}
+                onChange={(e) => setAreaSearch(e.target.value)}
               />
               <Image 
                 src="/icons/search_icon.svg" 
