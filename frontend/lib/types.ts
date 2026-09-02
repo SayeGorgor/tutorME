@@ -11,3 +11,15 @@ export type Language = {
   code: string;
   name: string;
 };
+
+/*-----------------------PROPS--------------------*/
+export type TutorCardProps = {
+    id: number;
+    firstName: string;
+    lastName: string;
+    description: string;
+    subject: string;
+    pfp: string | null;
+    location: Location | null;
+    languages: Language[] | null;
+}

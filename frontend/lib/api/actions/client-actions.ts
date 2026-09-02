@@ -9,3 +9,20 @@ export const searchLocations = async (search: string): Promise<any[]> => {
     return [];
   }
 };
+
+export const getTutorDistance = async (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): Promise<number> => {
+  try {
+    const response = await apiFetch<{ distance: number }>(
+      `/api/tutors/distance?lat1=${lat1}&lon1=${lon1}&lat2=${lat2}&lon2=${lon2}`
+    );
+    return response.distance;
+  } catch (error) {
+    console.error("Error getting tutor distance:", error);
+    return 0;
+  }
+};

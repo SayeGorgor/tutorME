@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { LANGUAGES } from "@/constants/languages";
 import type { Location } from "@/lib/types";
+import TutorCard from "@/components/TutorCard";
 
 export default function TutorsPage() {
     const searchParams = useSearchParams();
@@ -12,6 +13,8 @@ export default function TutorsPage() {
     const state = searchParams.get("state");
     const latitude = searchParams.get("lat");
     const longitude = searchParams.get("long");
+
+    const testLocation: Location = { city: "Stone Mountain", state: "GA", zip: "30087", country: "US", latitude: 33.8049, longitude: -84.1556 };
 
     const [maxDistance, setMaxDistance] = useState(25);
 
@@ -74,6 +77,16 @@ export default function TutorsPage() {
                 <h2 className="text-2xl font-bold">
                     {subject} tutors in {city}, {state}
                 </h2>
+                <TutorCard
+                    id={1}
+                    firstName="John"
+                    lastName="Doe"
+                    description="Experienced tutor in mathematics."
+                    subject="Mathematics"
+                    pfp={null}
+                    location={testLocation}
+                    languages={null}
+                />
             </div>
 
             <div 
