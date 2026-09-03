@@ -17,15 +17,15 @@ export default function TutorCard({
 }: TutorCardProps) {
     const [distance, setDistance] = useState<number | null>(null);
     
-    useEffect(() => {
-        const fetchDistance = async () => {
-            if (location) {
-                const distance = await getTutorDistance(0, 0, location.latitude, location.longitude);
-                setDistance(distance);
-            }
-        };
-        fetchDistance();
-    }, []);
+    // useEffect(() => {
+    //     const fetchDistance = async () => {
+    //         if (location) {
+    //             const distance = await getTutorDistance(0, 0, location.latitude, location.longitude);
+    //             setDistance(distance);
+    //         }
+    //     };
+    //     fetchDistance();
+    // }, []);
 
     return (
         <div className="flex gap-5 h-48 bg-white p-4 rounded-lg shadow-md">
