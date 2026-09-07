@@ -12,6 +12,12 @@ export type Language = {
   name: string;
 };
 
+export type Subject = {
+  id: number;
+  name: string;
+  category: string;
+}
+
 /*-----------------------PROPS--------------------*/
 export type TutorCardProps = {
     id: number;

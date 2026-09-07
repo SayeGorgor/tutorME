@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 from app.core.config import settings
 
 router = APIRouter(
-    prefix="/api/locations",
+    prefix="/locations",
     tags=["locations"]
 )
 

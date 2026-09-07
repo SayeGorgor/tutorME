@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from backend.app.actions.location_actions import haversine_distance
+from app.actions.location_actions import haversine_distance
 
 router = APIRouter(
     prefix="/tutors",

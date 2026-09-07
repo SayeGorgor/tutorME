@@ -1,5 +1,7 @@
 import { apiFetch } from "@/lib/api/api-helper";
+import { Subject } from "@/lib/types";
 
+/* LOCATION ACTIONS */
 export const searchLocations = async (search: string): Promise<any[]> => {
   try {
     const response = await apiFetch<any[]>(`/api/locations/search?s=${encodeURIComponent(search)}`);
@@ -26,3 +28,8 @@ export const getTutorDistance = async (
     return 0;
   }
 };
+
+/* SUBJECT ACTIONS */
+export const getSubjects = async (): Promise<Subject[]> => {
+  return apiFetch<Subject[]>("/api/subjects");
+}

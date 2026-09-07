@@ -4,15 +4,23 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-import { subjects } from "@/constants/subjects";
+// import { subjects } from "@/constants/subjects";
+import { getSubjects } from "@/lib/api/actions/client-actions";
 import type { Location } from "@/lib/types";
+import type { Subject } from "@/lib/types";
 import { searchLocations } from "@/lib/api/actions/client-actions";
+
+type SubjectCategory = {
+  name: string;
+  subjects: Subject[];
+}
 
 export default function Home() {
   const router = useRouter();
   const subjectsBoxRef = useRef<HTMLUListElement>(null);
 
   const [subject, setSubject] = useState<string>("");
+  const [subjectCategories, setSubjectCategories] = useState<SubjectCategory[]>([]);
   const [area, setArea] = useState<Location | null>({city: "Atlanta", state: "GA", zip: "30301", country: "US", latitude: 33.7490, longitude: -84.3880});
   const [areaSearch, setAreaSearch] = useState<string>("");
   const [sessionType, setSessionType] = useState<string>("");
@@ -55,6 +63,36 @@ export default function Home() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutsideSubjectsBox);
     };
+  }, []);
+
+  //Filter subjects by category
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const subjectsData = await getSubjects();
+        const subjectByCategory = subjectsData
+          .reduce<Record<string, Subject[]>>((groups, subject) => {
+            if(!groups[subject.category]) {
+              groups[subject.category] = [];
+            }
+
+            groups[subject.category].push(subject);
+
+            return groups;
+          }, 
+          {}
+        );
+
+        setSubjectCategories(Object.entries(subjectByCategory).map(([category, subjects]) => ({
+          name: category,
+          subjects,
+        })));
+      } catch (error) {
+        console.error("Failed to fetch subjects:", error);
+      }
+    };
+
+    fetchSubjects();
   }, []);
   
   
@@ -136,23 +174,23 @@ export default function Home() {
             <ul
               id="subjects-box"
               ref={subjectsBoxRef}
-              className={`absolute -top-78 flex flex-wrap w-180 z-10 bg-white border border-gray-400 rounded-md mt-1 overflow-y-auto ${showSubjectsBox ? 'block' : 'hidden'}`}
+              className={`absolute -top-90 flex flex-wrap w-150 z-10 bg-white border border-gray-400 rounded-md mt-1 overflow-y-auto ${showSubjectsBox ? 'block' : 'hidden'}`}
             >
-              {subjects.map((subject) => (
-                <li key={subject.id} className="p-2">
+              {subjectCategories.map((category) => (
+                <li key={category.name} className="p-2">
                   <span className="block text-lg font-semibold">
-                    {subject.name}
+                    {category.name}
                   </span>
-                  {subject.topics?.map((topic) => (
+                  {category.subjects?.map((subject) => (
                     <button 
-                      key={topic}  
+                      key={subject.id}  
                       className="block text-md text-gray-500 hover:text-gray-700 cursor-pointer"
                       onClick={(e) => {
                         e.preventDefault();
-                        setSubject(topic);
+                        setSubject(subject.name);
                       }}
                     >
-                      {topic}
+                      {subject.name}
                     </button>
                   ))}
                 </li>

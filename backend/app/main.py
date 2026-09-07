@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import locations
+
+from app.routes.api import api_router
 
 app = FastAPI()
 
@@ -14,7 +15,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-app.include_router(locations.router)
+app.include_router(api_router)
 
 @app.get("/")
 def root():
