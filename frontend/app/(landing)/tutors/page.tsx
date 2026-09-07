@@ -25,7 +25,7 @@ export default function TutorsPage() {
         >
             <div 
                 id="filter-column"
-                className="flex-1 p-4 bg-white rounded-xl"
+                className="flex-1 p-4 bg-white rounded-xl h-fit"
             >
                 <h2 className="text-lg font-bold mb-2">Filters</h2>
                 <form id="filter-form" className="flex flex-col gap-4">
@@ -72,7 +72,7 @@ export default function TutorsPage() {
             
             <div 
                 id="tutors-column"
-                className="flex-4"
+                className="flex flex-col gap-4 flex-4"
             >
                 <h2 className="text-2xl font-bold">
                     {subject} tutors in {city}, {state}
@@ -81,6 +81,26 @@ export default function TutorsPage() {
                     id={1}
                     firstName="John"
                     lastName="Doe"
+                    description="Experienced tutor in mathematics."
+                    subject="Mathematics"
+                    pfp={null}
+                    location={testLocation}
+                    languages={null}
+                />
+                <TutorCard
+                    id={2}
+                    firstName="Jane"
+                    lastName="Smith"
+                    description="Experienced tutor in mathematics."
+                    subject="Mathematics"
+                    pfp={null}
+                    location={testLocation}
+                    languages={null}
+                />
+                <TutorCard
+                    id={3}
+                    firstName="Bob"
+                    lastName="Johnson"
                     description="Experienced tutor in mathematics."
                     subject="Mathematics"
                     pfp={null}
