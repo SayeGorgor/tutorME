@@ -1,12 +1,14 @@
 type StarProps = {
   filled?: boolean;
+  height?: number;
+  width?: number;
 };
 
-export default function RatingStar({ filled = false }: StarProps) {
+export default function RatingStar({ filled = false, height = 4, width = 4 }: StarProps) {
   return (
     <svg
       viewBox="0 0 24 24"
-      className={`w-4 h-4 ${
+      className={`w-${width} h-${height} ${
         filled
           ? "fill-black stroke-black"
           : "fill-none stroke-black"

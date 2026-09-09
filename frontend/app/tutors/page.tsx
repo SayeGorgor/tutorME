@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { LANGUAGES } from "@/constants/languages";
-import type { Location } from "@/lib/types";
+import type { Location, User } from "@/lib/types";
 import TutorCard from "@/components/TutorCard";
+import { getTutors } from "@/lib/api/actions/client-actions";
 
 export default function TutorsPage() {
     const searchParams = useSearchParams();
@@ -17,11 +18,28 @@ export default function TutorsPage() {
     const testLocation: Location = { city: "Stone Mountain", state: "GA", zip: "30087", country: "US", latitude: 33.8049, longitude: -84.1556 };
 
     const [maxDistance, setMaxDistance] = useState(25);
+    const [tutors, setTutors] = useState<User[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTutors = async () => {
+            setIsLoading(true);
+            try {
+                const tutorData = await getTutors();
+                setTutors(tutorData);
+            } catch (error) {
+                console.error("Failed to fetch tutors:", error);
+            }
+            setIsLoading(false);
+        };
+        fetchTutors();
+    }, []);
+
 
     return (
         <div 
             id="page"
-            className="flex flex-1 gap-6 p-6 bg-blue-100"
+            className="flex h-full gap-6 p-6 bg-blue-100"
         >
             <div 
                 id="filter-column"
@@ -74,39 +92,32 @@ export default function TutorsPage() {
                 id="tutors-column"
                 className="flex flex-col gap-4 flex-4"
             >
-                <h2 className="text-2xl font-bold">
-                    {subject} tutors in {city}, {state}
-                </h2>
-                <TutorCard
-                    id={1}
-                    firstName="John"
-                    lastName="Doe"
-                    description="Experienced tutor in mathematics."
-                    subject="Mathematics"
-                    pfp={null}
-                    location={testLocation}
-                    languages={null}
-                />
-                <TutorCard
-                    id={2}
-                    firstName="Jane"
-                    lastName="Smith"
-                    description="Experienced tutor in mathematics."
-                    subject="Mathematics"
-                    pfp={null}
-                    location={testLocation}
-                    languages={null}
-                />
-                <TutorCard
-                    id={3}
-                    firstName="Bob"
-                    lastName="Johnson"
-                    description="Experienced tutor in mathematics."
-                    subject="Mathematics"
-                    pfp={null}
-                    location={testLocation}
-                    languages={null}
-                />
+                <div className="flex flex-col">
+                    <h2 className="text-2xl font-bold">
+                        {subject} tutors in {city}, {state}
+                    </h2>
+                    {!isLoading && (
+                        <p className="text-gray-700">
+                            {tutors.length} tutors match your search
+                        </p>
+                    )}
+                </div>
+                <ul id="tutor-list" className="flex flex-col min-h-0 gap-4 overflow-y-auto scrollbar-none">
+                    {isLoading ? (
+                        <p>Loading tutors...</p>
+                    ) : (
+                        tutors.map((tutor) => (
+                            <TutorCard
+                                key={tutor.id}
+                                id={tutor.id}
+                                firstName={tutor.firstName}
+                                lastName={tutor.lastName}
+                                subject={subject}
+                                location={testLocation}
+                            />
+                        ))
+                    )}
+                </ul>
             </div>
 
             <div 

@@ -18,14 +18,12 @@ export type Subject = {
   category: string;
 }
 
-/*-----------------------PROPS--------------------*/
-export type TutorCardProps = {
-    id: number;
-    firstName: string;
-    lastName: string;
-    description: string;
-    subject: string;
-    pfp: string | null;
-    location: Location | null;
-    languages: Language[] | null;
+export type User = {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  phoneNumber?: string;
+  subjects?: Subject[];
 }

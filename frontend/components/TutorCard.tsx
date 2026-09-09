@@ -1,24 +1,38 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { getTutorDistance } from '../lib/api/actions/client-actions';
-import { TutorCardProps } from '../lib/types';
 
 import Image from 'next/image';
 import Link from 'next/link';
 
 import RatingStar from './RatingStar';
+import { Language, Location } from '@/lib/types';
+
+type TutorCardProps = {
+    id: number;
+    firstName: string;
+    lastName: string;
+    description?: string;
+    subject: string | null;
+    pfp?: string | null;
+    location?: Location | null;
+    languages?: Language[];
+}
 
 export default function TutorCard({ 
     id, 
     firstName, 
     lastName, 
-    description, 
-    subject, 
-    pfp, 
+    description = "This is an example description.", 
+    subject="Calculus", 
+    pfp=null, 
     location, 
-    languages 
+    languages=[] 
 }: TutorCardProps) {
+    const router = useRouter();
+    
     const [distance, setDistance] = useState<number | null>(2.4136);
     
     // useEffect(() => {
@@ -32,7 +46,7 @@ export default function TutorCard({
     // }, []);
 
     return (
-        <div className="flex gap-5 h-48 bg-white p-4 rounded-lg shadow-md">
+        <div className="flex flex-1 gap-5 h-48 bg-white p-4 rounded-lg shadow-md">
             <Image 
                 id="pfp" 
                 src="/icons/default_pfp_icon.svg" 
@@ -68,7 +82,7 @@ export default function TutorCard({
                 </div>
                 <div id='info-right' className="flex flex-col justify-between items-end">
                     <p className='text-black font-bold'>$ 35 / hr</p>
-                    <Link href={`/`} className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 cursor-pointer text-center">
+                    <Link href={`/tutors/${id}`} className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 cursor-pointer text-center">
                         View Profile
                     </Link>
                 </div>

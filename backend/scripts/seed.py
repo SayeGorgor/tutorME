@@ -1,6 +1,7 @@
 from app.db.session import SessionLocal
 from app.models.user import User, UserRole
 from app.models.subject import Subject, SubjectCategory
+from app.models.user import User, UserRole
 
 def seed_subjects(db: SessionLocal):
     subjects = [
@@ -48,10 +49,80 @@ def seed_subjects(db: SessionLocal):
         if not existing:
             db.add(Subject(name=subject["name"], category=subject["category"]))
 
+def seed_users(db: SessionLocal):
+    users = [
+        {
+            "email": "jdoe@example.com", 
+            "role": UserRole.TUTOR,
+            "first_name": "John",
+            "last_name": "Doe"
+        },
+        {
+            "email": "jsmith@example.com", 
+            "role": UserRole.TUTOR,
+            "first_name": "Jane",
+            "last_name": "Smith"
+        },
+        {
+            "email": "bjohnson@example.com", 
+            "role": UserRole.STUDENT,
+            "first_name": "Bobby",
+            "last_name": "Johnson"
+        },
+        {
+            "email": "shope@example.com", 
+            "role": UserRole.STUDENT,
+            "first_name": "Suzy",
+            "last_name": "Hope"
+        },
+        {
+            "email": "hhuynh@example.com", 
+            "role": UserRole.TUTOR,
+            "first_name": "Huey",
+            "last_name": "Huynh"
+        },
+        {
+            "email": "ckhor@example.com", 
+            "role": UserRole.TUTOR,
+            "first_name": "Cristin",
+            "last_name": "Khor"
+        },
+        {
+            "email": "shouston@example.com", 
+            "role": UserRole.ADMIN,
+            "first_name": "Sam",
+            "last_name": "Houston"
+        },
+        {
+            "email": "vlove@example.com", 
+            "role": UserRole.ADMIN,
+            "first_name": "Valentina",
+            "last_name": "Love"
+        },
+    ]
+
+    for user in users:
+        existing = (
+            db.query(User)
+            .filter(User.email == user["email"])
+            .first()
+        )
+
+        if not existing:
+            db.add(
+                User(
+                    email=user["email"], 
+                    role=user["role"], 
+                    first_name=user["first_name"], 
+                    last_name=user["last_name"]
+                )
+            )
+
 def seed():
     with SessionLocal() as db:
         try:
             seed_subjects(db)
+            seed_users(db)
             db.commit()
         except:
             db.rollback()
