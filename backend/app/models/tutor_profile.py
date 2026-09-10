@@ -18,8 +18,21 @@ class TutorProfile(Base):
         unique=True,
     )
 
+    intro: Mapped[str] = mapped_column(
+        String(255),
+    )
+
     bio: Mapped[str] = mapped_column(
         String(1000),
+    )
+
+    price: Mapped[float] = mapped_column(
+        nullable=False
+    )
+
+    availability: Mapped[list["TutorAvailability"]] = relationship(
+        back_populates="tutor",
+        cascade="all, delete-orphan"
     )
 
     user: Mapped["User"] = relationship(

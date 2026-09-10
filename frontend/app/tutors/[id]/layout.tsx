@@ -6,11 +6,11 @@ export default function LandingLayout({
     children: React.ReactNode 
 }) {
     return (
-        <div className="flex h-screen flex-col">
+        <div>
             <LandingNav />
-            <div className="min-h-0 flex-1">
+            <main>
                 {children}
-            </div>
+            </main>
         </div>
     )
 }

@@ -1,6 +1,6 @@
 export default function LoginPage() {
     return(
-        <div className="relative flex flex-1 flex-col items-center justify-center gap-6 bg-[url('/images/login_page_background.jpg')] bg-cover bg-[center_60%]">
+        <main className="relative flex flex-1 flex-col items-center justify-center gap-6 bg-[url('/images/login_page_background.jpg')] bg-cover bg-[center_60%]">
             <div id="tint" className="absolute inset-0 bg-[rgba(2,0,112,0.2)] z-10"></div>
             <form className="flex w-2/5 flex-col gap-4 bg-white p-6 rounded-md z-20">
                 <h1 className="text-2xl font-bold">Log In</h1>
@@ -19,6 +19,6 @@ export default function LoginPage() {
                     Log In
                 </button>
             </form>
-        </div>
+        </main>
     );
 }

@@ -49,6 +49,13 @@ class User(Base):
         nullable=False,
     )
 
+    timezone: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+        default="America/New_York",
+        server_default="America/New_York"
+    )
+
     reviews_written: Mapped[list["Review"]] = relationship(
         foreign_keys="Review.author_id",
         back_populates="author",

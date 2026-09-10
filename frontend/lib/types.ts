@@ -24,6 +24,7 @@ export type User = {
   firstName: string;
   lastName: string;
   role: string;
+  timezone: string;
   phoneNumber?: string;
   subjects?: Subject[];
 }

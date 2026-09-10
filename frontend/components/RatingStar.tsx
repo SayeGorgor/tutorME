@@ -8,7 +8,7 @@ export default function RatingStar({ filled = false, height = 4, width = 4 }: St
   return (
     <svg
       viewBox="0 0 24 24"
-      className={`w-${width} h-${height} ${
+      className={`w-${width || 4} h-${height || 4} ${
         filled
           ? "fill-black stroke-black"
           : "fill-none stroke-black"
