@@ -16,6 +16,7 @@ type TutorCardProps = {
     lastName: string;
     description?: string;
     subject: string | null;
+    price: number;
     pfp?: string | null;
     location?: Location | null;
     languages?: Language[];
@@ -27,6 +28,7 @@ export default function TutorCard({
     lastName, 
     description = "This is an example description.", 
     subject="Calculus", 
+    price,
     pfp=null, 
     location, 
     languages=[] 
@@ -50,7 +52,7 @@ export default function TutorCard({
             <Image 
                 id="pfp" 
                 src="/icons/default_pfp_icon.svg" 
-                alt={`${firstName} ${lastName}`} 
+                alt={`${firstName} ${lastName}'s Profile Picture`} 
                 width={150} 
                 height={100}
                 className="bg-gray-500 rounded-lg"
@@ -81,7 +83,7 @@ export default function TutorCard({
                     </div>
                 </div>
                 <div id='info-right' className="flex flex-col justify-between items-end">
-                    <p className='text-black font-bold'>$ 35 / hr</p>
+                    <p className='text-black font-bold'>${price} / hr</p>
                     <Link href={`/tutors/${id}`} className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 cursor-pointer text-center">
                         View Profile
                     </Link>

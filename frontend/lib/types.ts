@@ -28,3 +28,11 @@ export type User = {
   phoneNumber?: string;
   subjects?: Subject[];
 }
+
+export type TutorProfile = {
+  userId: number;
+  intro: string;
+  bio: string;
+  price: number;
+  user: User;
+};

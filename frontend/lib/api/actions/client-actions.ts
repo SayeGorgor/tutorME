@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/api-helper";
-import { Subject, User } from "@/lib/types";
+import { Subject, TutorProfile, User } from "@/lib/types";
 
 /* LOCATION ACTIONS */
 export const searchLocations = async (search: string): Promise<any[]> => {
@@ -30,8 +30,12 @@ export const getTutorDistance = async (
 };
 
 /* USER ACTIONS */
-export const getTutors = async (): Promise<User[]> => {
-  return apiFetch<User[]>("/api/tutors");
+export const getTutors = async (): Promise<TutorProfile[]> => {
+  return apiFetch<TutorProfile[]>("/api/tutors");
+};
+
+export const getTutorByUserId = async (id: number): Promise<TutorProfile> => {
+  return apiFetch<TutorProfile>(`/api/tutors/user/${id}`);
 };
 
 /* SUBJECT ACTIONS */

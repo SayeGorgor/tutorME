@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { LANGUAGES } from "@/constants/languages";
-import type { Location, User } from "@/lib/types";
+import type { Location, User, TutorProfile } from "@/lib/types";
 import TutorCard from "@/components/TutorCard";
 import { getTutors } from "@/lib/api/actions/client-actions";
 
@@ -18,7 +18,7 @@ export default function TutorsPage() {
     const testLocation: Location = { city: "Stone Mountain", state: "GA", zip: "30087", country: "US", latitude: 33.8049, longitude: -84.1556 };
 
     const [maxDistance, setMaxDistance] = useState(25);
-    const [tutors, setTutors] = useState<User[]>([]);
+    const [tutors, setTutors] = useState<TutorProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -108,10 +108,11 @@ export default function TutorsPage() {
                     ) : (
                         tutors.map((tutor) => (
                             <TutorCard
-                                key={tutor.id}
-                                id={tutor.id}
-                                firstName={tutor.firstName}
-                                lastName={tutor.lastName}
+                                key={tutor.userId}
+                                id={tutor.userId}
+                                firstName={tutor.user.firstName}
+                                lastName={tutor.user.lastName}
+                                price={tutor.price}
                                 subject={subject}
                                 location={testLocation}
                             />

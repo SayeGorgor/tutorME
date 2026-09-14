@@ -1,7 +1,7 @@
 from app.db.session import SessionLocal
 from app.models.user import User, UserRole
 from app.models.subject import Subject, SubjectCategory
-from app.models.user import User, UserRole
+from app.models.tutor_profile import TutorProfile
 
 def seed_subjects(db: SessionLocal):
     subjects = [
@@ -118,11 +118,59 @@ def seed_users(db: SessionLocal):
                 )
             )
 
+    db.flush()
+
+def seed_tutor_profiles(db: SessionLocal):
+    tutors = [
+        {
+            "user_id": 1,
+            "intro": "Hello, I am a tutor.",
+            "bio": "I have been tutoring for several years. I am very experienced and excited to help you learn whatever subject you'd like!",
+            "price": 35.0
+        },
+        {
+            "user_id": 2,
+            "intro": "Hello, I am a tutor.",
+            "bio": "I have been tutoring for several years. I am very experienced and excited to help you learn whatever subject you'd like!",
+            "price": 35.0
+        },
+        {
+            "user_id": 5,
+            "intro": "Hello, I am a tutor.",
+            "bio": "I have been tutoring for several years. I am very experienced and excited to help you learn whatever subject you'd like!",
+            "price": 35.0
+        },
+        {
+            "user_id": 6,
+            "intro": "Hello, I am a tutor.",
+            "bio": "I have been tutoring for several years. I am very experienced and excited to help you learn whatever subject you'd like!",
+            "price": 35.0
+        },
+    ]
+
+    for tutor in tutors:
+        existing = (
+            db.query(TutorProfile)
+            .filter(TutorProfile.user_id == tutor["user_id"])
+            .first()
+        )
+
+        if not existing:
+            db.add(
+                TutorProfile(
+                    user_id=tutor["user_id"],
+                    intro=tutor["intro"],
+                    bio=tutor["bio"],
+                    price=tutor["price"]
+                )
+            )
+
 def seed():
     with SessionLocal() as db:
         try:
             seed_subjects(db)
             seed_users(db)
+            seed_tutor_profiles(db)
             db.commit()
         except:
             db.rollback()
