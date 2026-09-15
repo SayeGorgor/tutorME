@@ -123,13 +123,26 @@ export default function TutorProfilePage({
 
                             <div className="flex flex-col gap-1">
                                 <p className="text-xl font-bold">Subjects</p>
-                                <ul className="flex">
+                                <ul className="flex gap-2">
                                     <li>
                                         <div 
-                                            id='subject-badge'
                                             className="bg-blue-200 w-fit py-1 px-3 rounded-2xl text-sm text-blue-700 font-bold"
                                         >
                                             Algebra
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div 
+                                            className="bg-blue-200 w-fit py-1 px-3 rounded-2xl text-sm text-blue-700 font-bold"
+                                        >
+                                            Geometry
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div 
+                                            className="bg-blue-200 w-fit py-1 px-3 rounded-2xl text-sm text-blue-700 font-bold"
+                                        >
+                                            SAT Prep
                                         </div>
                                     </li>
                                 </ul>
@@ -138,6 +151,9 @@ export default function TutorProfilePage({
                             <div className="flex flex-col gap-1">
                                 <p className="text-xl font-bold">Reviews</p>
                             </div>
+                        </div>
+                        <div id="additional-info-section-right" className="flex flex-col gap-5 ml-10">
+                            {/* Additional right-side content can go here */}
                         </div>
                     </div>
                 </>
