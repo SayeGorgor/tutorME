@@ -14,12 +14,12 @@ class Review(Base):
 
     author_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
     )
 
     tutor_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
     )
 
     rating: Mapped[int] = mapped_column(

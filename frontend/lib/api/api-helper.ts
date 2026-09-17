@@ -1,5 +1,9 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+type ApiFetchOptions = Omit<RequestInit, 'body'> & {
+  body?: unknown;
+};
+
 export class ApiError extends Error {
   status: number;
 
@@ -11,9 +15,16 @@ export class ApiError extends Error {
 
 export async function apiFetch<T>(
     endpoint: string, 
-    options?: RequestInit
+    options?: ApiFetchOptions
 ): Promise<T> {
-  const response = await fetch(`${API_URL}${endpoint}`, options);
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options?.headers || {}),
+    },
+    body: options?.body ? JSON.stringify(options.body) : undefined,
+  });
 
   if (!response.ok) {
     let message = `Something went wrong`;

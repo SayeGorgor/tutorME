@@ -18,6 +18,8 @@ export type Subject = {
   category: string;
 }
 
+export type UserRole = "student" | "tutor" | "admin";
+
 export type User = {
   id: number;
   email: string;
@@ -28,6 +30,15 @@ export type User = {
   phoneNumber?: string;
   subjects?: Subject[];
 }
+
+export type CreateUserSchema = {
+  authID: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  timezone: string;
+};
 
 export type TutorProfile = {
   userId: number;

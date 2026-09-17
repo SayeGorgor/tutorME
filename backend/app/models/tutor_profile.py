@@ -14,7 +14,7 @@ class TutorProfile(Base):
 
     user_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
         unique=True,
     )
 
@@ -37,5 +37,5 @@ class TutorProfile(Base):
 
     user: Mapped["User"] = relationship(
         foreign_keys=[user_id], 
-        back_populates="tutor_profile"
+        back_populates="tutor_profile",
     )

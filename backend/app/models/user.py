@@ -1,5 +1,6 @@
 from sqlalchemy import BigInteger, String, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey
 
 from app.db.base import Base
 
@@ -19,6 +20,13 @@ class User(Base):
         autoincrement=True,
     )
 
+    auth_id: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
     email: Mapped[str] = mapped_column(
         String(255),
         unique=True,
@@ -26,10 +34,12 @@ class User(Base):
 
     first_name: Mapped[str] = mapped_column(
         String(255),
+        nullable=False,
     )
 
     last_name: Mapped[str] = mapped_column(
         String(255),
+        nullable=False,
     )
 
     phone_number: Mapped[str] = mapped_column(
@@ -50,7 +60,7 @@ class User(Base):
     )
 
     timezone: Mapped[str] = mapped_column(
-        String,
+        String(255),
         nullable=False,
         default="America/New_York",
         server_default="America/New_York"
@@ -59,14 +69,17 @@ class User(Base):
     reviews_written: Mapped[list["Review"]] = relationship(
         foreign_keys="Review.author_id",
         back_populates="author",
+        cascade="all, delete-orphan"
     )
 
     reviews_received: Mapped[list["Review"]] = relationship(
         foreign_keys="Review.tutor_id",
         back_populates="tutor",
+        cascade="all, delete-orphan"
     )
 
     tutor_profile: Mapped["TutorProfile"] = relationship(
         foreign_keys="TutorProfile.user_id",
         back_populates="user",
+        cascade="all, delete-orphan"
     )

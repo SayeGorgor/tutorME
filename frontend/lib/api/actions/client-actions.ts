@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/api-helper";
-import { Subject, TutorProfile, User } from "@/lib/types";
+import { Subject, TutorProfile, User, CreateUserSchema } from "@/lib/types";
 
 /* LOCATION ACTIONS */
 export const searchLocations = async (search: string): Promise<any[]> => {
@@ -30,6 +30,26 @@ export const getTutorDistance = async (
 };
 
 /* USER ACTIONS */
+export const createUser = async (user: CreateUserSchema): Promise<User | null> => {
+  try {
+    const response = await apiFetch<User>("/api/users", {
+      method: "POST",
+      body: { 
+        auth_id: user.authID, 
+        first_name: user.firstName,
+        last_name: user.lastName,
+        email: user.email, 
+        role: user.role,
+        timezone: user.timezone
+      },
+    });
+    return response;
+  } catch (error) {
+    console.error("Error signing up:", error);
+    return null;
+  }
+};
+
 export const getTutors = async (): Promise<TutorProfile[]> => {
   return apiFetch<TutorProfile[]>("/api/tutors");
 };
