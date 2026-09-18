@@ -7,12 +7,12 @@ export default function ProtectedStudentNav() {
                 tutorME
             </h1>
             <ul className="flex flex-col gap-2 w-full">
-                <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/dashboard">Dashboard</Link></li>
-                <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/sessions">My Sessions</Link></li>
-                <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/messages">Messages</Link></li>
-                <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/saved-tutors">Saved Tutors</Link></li>
-                <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/payments">Payments</Link></li>
-                <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/settings">Settings</Link></li>
+                <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/student/dashboard">Dashboard</Link></li>
+                <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/student/sessions">My Sessions</Link></li>
+                <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/student/messages">Messages</Link></li>
+                <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/student/saved-tutors">Saved Tutors</Link></li>
+                <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/student/payments">Payments</Link></li>
+                <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/student/settings">Settings</Link></li>
             </ul>
         </nav>
     )

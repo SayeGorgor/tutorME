@@ -49,99 +49,28 @@ def seed_subjects(db: SessionLocal):
         if not existing:
             db.add(Subject(name=subject["name"], category=subject["category"]))
 
-def seed_users(db: SessionLocal):
-    users = [
-        {
-            "email": "jdoe@example.com", 
-            "role": UserRole.TUTOR,
-            "first_name": "John",
-            "last_name": "Doe"
-        },
-        {
-            "email": "jsmith@example.com", 
-            "role": UserRole.TUTOR,
-            "first_name": "Jane",
-            "last_name": "Smith"
-        },
-        {
-            "email": "bjohnson@example.com", 
-            "role": UserRole.STUDENT,
-            "first_name": "Bobby",
-            "last_name": "Johnson"
-        },
-        {
-            "email": "shope@example.com", 
-            "role": UserRole.STUDENT,
-            "first_name": "Suzy",
-            "last_name": "Hope"
-        },
-        {
-            "email": "hhuynh@example.com", 
-            "role": UserRole.TUTOR,
-            "first_name": "Huey",
-            "last_name": "Huynh"
-        },
-        {
-            "email": "ckhor@example.com", 
-            "role": UserRole.TUTOR,
-            "first_name": "Cristin",
-            "last_name": "Khor"
-        },
-        {
-            "email": "shouston@example.com", 
-            "role": UserRole.ADMIN,
-            "first_name": "Sam",
-            "last_name": "Houston"
-        },
-        {
-            "email": "vlove@example.com", 
-            "role": UserRole.ADMIN,
-            "first_name": "Valentina",
-            "last_name": "Love"
-        },
-    ]
-
-    for user in users:
-        existing = (
-            db.query(User)
-            .filter(User.email == user["email"])
-            .first()
-        )
-
-        if not existing:
-            db.add(
-                User(
-                    email=user["email"], 
-                    role=user["role"], 
-                    first_name=user["first_name"], 
-                    last_name=user["last_name"]
-                )
-            )
-
-    db.flush()
-
 def seed_tutor_profiles(db: SessionLocal):
     tutors = [
         {
-            "user_id": 1,
+            "user_id": 11,
             "intro": "Hello, I am a tutor.",
             "bio": "I have been tutoring for several years. I am very experienced and excited to help you learn whatever subject you'd like!",
             "price": 35.0
         },
         {
-            "user_id": 2,
+            "user_id": 12,
             "intro": "Hello, I am a tutor.",
             "bio": "I have been tutoring for several years. I am very experienced and excited to help you learn whatever subject you'd like!",
             "price": 35.0
         },
         {
-            "user_id": 5,
+            "user_id": 14,
             "intro": "Hello, I am a tutor.",
             "bio": "I have been tutoring for several years. I am very experienced and excited to help you learn whatever subject you'd like!",
             "price": 35.0
         },
         {
-            "user_id": 6,
+            "user_id": 15,
             "intro": "Hello, I am a tutor.",
             "bio": "I have been tutoring for several years. I am very experienced and excited to help you learn whatever subject you'd like!",
             "price": 35.0
@@ -169,7 +98,6 @@ def seed():
     with SessionLocal() as db:
         try:
             seed_subjects(db)
-            seed_users(db)
             seed_tutor_profiles(db)
             db.commit()
         except:
