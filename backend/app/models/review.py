@@ -39,3 +39,10 @@ class Review(Base):
         foreign_keys=[tutor_id],
         back_populates="reviews_received"
     )
+
+    created_at: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        default="now()",
+        server_default="now()"
+    )

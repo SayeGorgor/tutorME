@@ -35,6 +35,13 @@ class TutorProfile(Base):
         cascade="all, delete-orphan"
     )
 
+    created_at: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        default="now()",
+        server_default="now()"
+    )
+
     user: Mapped["User"] = relationship(
         foreign_keys=[user_id], 
         back_populates="tutor_profile",

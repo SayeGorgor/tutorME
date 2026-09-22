@@ -66,6 +66,13 @@ class User(Base):
         server_default="America/New_York"
     )
 
+    created_at: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        default="now()",
+        server_default="now()"
+    )
+
     reviews_written: Mapped[list["Review"]] = relationship(
         foreign_keys="Review.author_id",
         back_populates="author",

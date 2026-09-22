@@ -7,6 +7,13 @@ export type Location = {
     longitude: number;
 }
 
+export type Review = {
+  id: number;
+  rating: number;
+  comment: string;
+  author: User;
+};
+
 export type Language = {
   code: string;
   name: string;
@@ -25,10 +32,12 @@ export type User = {
   email: string;
   firstName: string;
   lastName: string;
-  role: string;
+  role: UserRole;
   timezone: string;
   phoneNumber?: string;
   subjects?: Subject[];
+  reviewsWritten?: Review[];
+  reviewsReceived?: Review[];
 }
 
 export type CreateUserSchema = {

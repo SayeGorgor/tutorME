@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/api/api-helper";
 import { Subject, TutorProfile, User, CreateUserSchema } from "@/lib/types";
+import { authClient } from "@/lib/auth/client";
 
 /* LOCATION ACTIONS */
 export const searchLocations = async (search: string): Promise<any[]> => {
@@ -46,6 +47,27 @@ export const createUser = async (user: CreateUserSchema): Promise<User | null> =
     return response;
   } catch (error) {
     console.error("Error signing up:", error);
+    return null;
+  }
+};
+
+export const getCurrentUser = async (): Promise<User | null> => {
+  try {
+    const { data: tokenData } = await authClient.token();
+    
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
+        headers: {
+            Authorization: `Bearer ${tokenData?.token}`
+        }
+    });
+    if (response.ok) {
+        const data = await response.json();
+        return data;
+    } else {
+        return null;
+    }
+  } catch (error) {
+    console.error("Error getting current user:", error);
     return null;
   }
 };

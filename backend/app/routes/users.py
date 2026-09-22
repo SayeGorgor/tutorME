@@ -5,8 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.dependencies import get_db
+from app.actions.actions import get_current_user
 from app.models.user import User, UserRole
 from app.schemas.user import UserResponse, UserCreate
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -35,3 +38,7 @@ def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
         db.rollback()
         logger.exception("Error creating user: %s", user_data.auth_id)
         raise HTTPException(status_code=500, detail="Unable to create your account, please try again.")
+
+@router.get('/me', response_model=UserResponse)
+def get_current_user_route(current_user: User = Depends(get_current_user), response_model = UserResponse):
+    return current_user

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useRouter } from "next/navigation";
+import { getCurrentUser } from "@/lib/api/actions/client-actions";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -13,11 +14,20 @@ export default function LoginPage() {
     
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        try {
-            await authClient.signIn.email({ email, password });
-            router.push("/student/dashboard"); // Redirect to the homepage after successful login
-        } catch (error) {
+        const { error: loginError } = await authClient.signIn.email({ email, password });
+        if (loginError) {
             setError("Login failed. Please check your credentials and try again.");
+        } else {
+            const currentUser = await getCurrentUser();
+            if (currentUser) {
+                if(currentUser.role === "admin") {
+                    router.push("/student/dashboard");
+                } else {
+                    router.push(`/${currentUser.role}/dashboard`);
+                }
+            } else {
+                setError("Failed to fetch user data.");
+            }
         }
     };
 

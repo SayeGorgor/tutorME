@@ -29,6 +29,13 @@ class Subject(Base):
         unique=True,
     )
 
+    created_at: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        default="now()",
+        server_default="now()"
+    )
+
     category: Mapped[SubjectCategory] = mapped_column(
         SQLEnum(
             SubjectCategory, 

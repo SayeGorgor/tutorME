@@ -37,6 +37,13 @@ class TutorAvailability(Base):
         default="America/New_York"
     )
 
+    created_at: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        default="now()",
+        server_default="now()"
+    )
+
     tutor: Mapped["TutorProfile"] = relationship(
         "TutorProfile",
         back_populates="availability"

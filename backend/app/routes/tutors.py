@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.db.dependencies import get_db
 from app.models.user import User
 from app.models.tutor_profile import TutorProfile
-from app.actions.location_actions import haversine_distance
+from app.actions.actions import haversine_distance
 
 from app.schemas.user import UserResponse
 from app.schemas.tutor import TutorResponse

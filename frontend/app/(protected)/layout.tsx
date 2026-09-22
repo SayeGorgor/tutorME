@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth/server";
 import { redirect } from "next/navigation";
+import { UserProvider } from "@/lib/context/UserContext";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +15,8 @@ export default async function ProtectedLayout({
     }
 
     return (
-        <div>
+        <UserProvider>
             {children}
-        </div>
+        </UserProvider>
     )
 };
