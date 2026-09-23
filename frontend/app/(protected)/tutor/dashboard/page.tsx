@@ -1,10 +1,19 @@
+'use client';
+
 import UpcomingSessionsCard from "@/components/UpcomingSessionsCard";
+import { useCurrentUser } from "@/lib/context/UserContext";
 
 export default function DashboardPage() {
+    const { user, loading } = useCurrentUser();
+
+    if (loading) {
+        return <p>Loading...</p>;
+    }
+
     return (
         <div className="flex flex-col gap-6 px-10 py-6">
             <div>
-                <h1 className="text-2xl font-bold">Good afternoon, Tutor!</h1>
+                <h1 className="text-2xl font-bold">Good afternoon, {user?.firstName}!</h1>
                 <p className="text-gray-600">Here's what's coming up in your learning schedule.</p>
             </div>
 

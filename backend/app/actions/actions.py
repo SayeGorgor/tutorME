@@ -43,7 +43,8 @@ def get_current_user(
             signing_key.key, 
             algorithms=["EdDSA"],
             issuer=NEON_AUTH_ISSUER_AUDIENCE,
-            audience=NEON_AUTH_ISSUER_AUDIENCE
+            audience=NEON_AUTH_ISSUER_AUDIENCE,
+            leeway=10
         )
     
     except jwt.ExpiredSignatureError:
