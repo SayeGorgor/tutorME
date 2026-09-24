@@ -60,7 +60,7 @@ export default function TutorProfilePage({
                                 src="/icons/default_pfp_icon.svg" 
                                 alt={`${tutorProfile.user.firstName} ${tutorProfile.user.lastName}'s Profile Picture`} 
                                 width={210} 
-                                height={140}
+                                height={210}
                                 className="bg-gray-500 rounded-lg"
                             />
                             <div

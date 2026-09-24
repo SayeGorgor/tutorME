@@ -8,21 +8,21 @@ from app.models.tutor_profile import TutorProfile
 from app.actions.actions import haversine_distance
 
 from app.schemas.user import UserResponse
-from app.schemas.tutor import TutorResponse
+from app.schemas.tutor import TutorProfileResponse
 
 router = APIRouter(
     prefix="/tutors",
     tags=["Tutors"]
 )
 
-@router.get("/", response_model=list[TutorResponse])
+@router.get("/", response_model=list[TutorProfileResponse])
 def get_tutors(db: Session = Depends(get_db)):
     # Placeholder for tutor retrieval logic
     tutors = db.scalars(select(TutorProfile)).all()
 
     return tutors
 
-@router.get("/user/{user_id}", response_model=TutorResponse)
+@router.get("/user/{user_id}", response_model=TutorProfileResponse)
 def get_tutor_by_user_id(user_id: int, db: Session = Depends(get_db)):
     tutor = db.scalars(select(TutorProfile).where(TutorProfile.user_id == user_id)).first()
     if not tutor:

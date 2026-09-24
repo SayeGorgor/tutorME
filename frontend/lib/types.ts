@@ -7,6 +7,15 @@ export type Location = {
     longitude: number;
 }
 
+export type Availability = {
+  id: number;
+  tutorId: number;
+  dayOfWeek: number;
+  startTime: Date;
+  endTime: Date;
+  timezone: string;
+};
+
 export type Review = {
   id: number;
   rating: number;
@@ -55,4 +64,5 @@ export type TutorProfile = {
   bio: string;
   price: number;
   user: User;
+  availability: Availability[];
 };
