@@ -8,3 +8,9 @@ class TutorProfileResponse(APIModel):
     price: float
     user: UserSummary
     availability: list[AvailabilitySummary]
+
+class TutorProfileUpdate(APIModel):
+    intro: str | None = None
+    bio: str | None = None
+    price: float | None = None
+    availability: list[AvailabilitySummary] | None = None

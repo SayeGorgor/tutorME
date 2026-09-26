@@ -24,7 +24,7 @@ export default function ProtectedStudentNav() {
                 <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/student/saved-tutors">Saved Tutors</Link></li>
                 <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/student/payments">Payments</Link></li>
                 <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/student/settings">Settings</Link></li>
-                <li><button onClick={handleLogout} className="block p-2 w-full text-white text-left rounded-lg hover:bg-indigo-500">Log Out</button></li>
+                <li><button onClick={handleLogout} className="block p-2 w-full text-white text-left cursor-pointer rounded-lg hover:bg-indigo-500">Log Out</button></li>
             </ul>
         </nav>
     )

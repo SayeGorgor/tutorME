@@ -1,6 +1,15 @@
 import { apiFetch } from "@/lib/api/api-helper";
-import { Subject, TutorProfile, User, CreateUserSchema } from "@/lib/types";
 import { authClient } from "@/lib/auth/client";
+
+import { 
+  Subject, 
+  TutorProfile, 
+  User, 
+  CreateUserSchema, 
+  UpdateTutorProfileSchema,
+  APIError,
+  APIResponse
+} from "@/lib/types";
 
 /* LOCATION ACTIONS */
 export const searchLocations = async (search: string): Promise<any[]> => {
@@ -55,20 +64,37 @@ export const getCurrentUser = async (): Promise<User | null> => {
   try {
     const { data: tokenData } = await authClient.token();
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
+    const response = await apiFetch<User>('/api/users/me', {
         headers: {
             Authorization: `Bearer ${tokenData?.token}`
         }
     });
-    if (response.ok) {
-        const data = await response.json();
-        return data;
-    } else {
-        return null;
-    }
+    return response;
   } catch (error) {
     console.error("Error getting current user:", error);
     return null;
+  }
+};
+
+export const updateTutorProfile = async (inputData: UpdateTutorProfileSchema): Promise<APIResponse<TutorProfile>> => {
+  const { userId, tutorProfileData } = inputData;
+  
+  try {
+    const { data: tokenData } = await authClient.token();
+    
+    const response = await apiFetch<TutorProfile>(`/api/tutors/user/${userId}`, {
+        method: "PATCH",
+        headers: {
+            Authorization: `Bearer ${tokenData?.token}`
+        },
+        body: tutorProfileData
+    });
+     return { data: response }
+  } catch (error) {
+    return { error: { 
+      status: (error as any)?.status || 500,
+      message: (error as Error).message || "Error updating tutor profile" 
+    } }
   }
 };
 

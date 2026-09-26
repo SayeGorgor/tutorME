@@ -23,7 +23,7 @@ export default function ProtectedTutorNav() {
                 <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/tutor/students">Students</Link></li>
                 <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/tutor/payments">Earnings</Link></li>
                 <li><Link className="block p-2 w-full text-white rounded-lg hover:bg-indigo-500" href="/tutor/settings">Settings</Link></li>
-                <li><button onClick={handleLogout} className="block p-2 w-full text-white text-left rounded-lg hover:bg-indigo-500">Log Out</button></li>
+                <li><button onClick={handleLogout} className="block p-2 w-full text-white text-left rounded-lg cursor-pointer hover:bg-indigo-500">Log Out</button></li>
             </ul>
         </nav>
     )

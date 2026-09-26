@@ -6,9 +6,9 @@ export default function TutorLayout({
     children: React.ReactNode 
 }) {
     return (
-        <div className="flex min-h-screen bg-blue-50">
+        <div className="flex min-h-screen max-w-screen bg-blue-50">
             <ProtectedTutorNav />
-            <main>
+            <main className="flex-1">
                 {children}
             </main>
         </div>

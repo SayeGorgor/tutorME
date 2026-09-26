@@ -66,3 +66,23 @@ export type TutorProfile = {
   user: User;
   availability: Availability[];
 };
+
+export type UpdateTutorProfileSchema = {
+  userId: number,
+  tutorProfileData: {
+    intro?: string;
+    bio?: string;
+    price?: number;
+    availability?: Availability[];
+  }
+};
+
+export type APIError = {
+  status?: number;
+  message: string;
+};
+
+export type APIResponse<T> = {
+  data?: T;
+  error?: APIError;
+};
