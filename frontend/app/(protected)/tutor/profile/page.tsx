@@ -1,5 +1,6 @@
 'use client';
 
+import React from "react";
 import { useState, useEffect } from "react";
 
 import Image from "next/image";
@@ -13,10 +14,14 @@ import { TutorProfile } from "@/lib/types";
 import RatingStar from "@/components/RatingStar";
 import EditIcon from "@/public/icons/edit_icon.svg";
 import LoadingAnimationIcon from "@/public/icons/loading_animation_icon.svg";
+import { AVAILABILITY_TIMES } from "@/constants/constants";
 
 export default function ProfilePage() {
     const { user, loading } = useCurrentUser();
     const router = useRouter();
+
+    const times = AVAILABILITY_TIMES;
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(null);
     const [isEditingIntro, setIsEditingIntro] = useState(false);
@@ -24,10 +29,35 @@ export default function ProfilePage() {
     const [isEditingAbout, setIsEditingAbout] = useState(false);
     const [aboutText, setAboutText] = useState("");
     const [isEditingSubjects, setIsEditingSubjects] = useState(false);
+    const [activeSquares, setActiveSquares] = useState<Set<number>>(new Set());
 
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
     const [systemMessage, setSystemMessage] = useState("");
+
+    const [currentTimePage, setCurrentTimePage] = useState(0);
+    const timePages = Array.from(
+        {length: Math.ceil(times.length / 6)},
+        (_, i) => times.slice(
+            i * 6,
+            i * 6 + 6
+        )
+    );
+
+    useEffect(() => {
+        const fetchTutorProfile = async () => {
+            if (user) {
+                setIsLoading(true);
+                const res = await getTutorByUserId(user.id);
+                console.log('Tutor Profile: ', res);
+                setTutorProfile(res);
+                setIntroText(res.intro);
+                setAboutText(res.bio);
+                setIsLoading(false);
+            }
+        };
+        fetchTutorProfile();
+    }, [user]);
 
     const saveIntroChange = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -75,20 +105,35 @@ export default function ProfilePage() {
         setIsLoading(false);
     };
 
-    useEffect(() => {
-        const fetchTutorProfile = async () => {
-            if (user) {
-                setIsLoading(true);
-                const res = await getTutorByUserId(user.id);
-                console.log('Tutor Profile: ', res);
-                setTutorProfile(res);
-                setIntroText(res.intro);
-                setAboutText(res.bio);
-                setIsLoading(false);
+    const toggleSquare = (id: number) => {
+        setActiveSquares((prev) => {
+            const next = new Set(prev);
+
+            if(next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
             }
-        };
-        fetchTutorProfile();
-    }, [user]);
+
+            return next;
+        })
+    }
+
+    const getCellSize = (index: number, column: number) => {
+        const isActive = activeSquares.has(index);
+
+        if(!isActive) return "rounded-2xl border border-black"
+
+        const hasLeftNeighbor = column > 0 && activeSquares.has(index - 1);
+        const hasRightNeighbor = activeSquares.has(index + 1);
+
+        return `
+            bg-blue-500
+            ${hasLeftNeighbor ? "-ml-2 pl-2 rounded-l-none border-l-0" : "rounded-l-2xl"}
+            ${hasRightNeighbor ? "-mr-2 pr-2 rounded-r-none border-r-0" : "rounded-r-2xl"}
+            border border-black
+        `
+    }
 
     return (
         <div className="flex flex-1 flex-col gap-6 px-10 py-6 h-full w-full">
@@ -147,7 +192,7 @@ export default function ProfilePage() {
                                         <textarea
                                             value={introText}
                                             onChange={(e) => setIntroText(e.target.value)}
-                                            className="w-full p-2 border rounded-lg bg-white"
+                                            className="w-150 h-15 p-2 border rounded-lg bg-white"
                                         />
                                         <div className="flex flex-col items-start justify-center">
                                             <button 
@@ -187,8 +232,8 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div id="additional-info-section" className="flex mt-4">
-                        <div id="additional-info-section-left" className="flex flex-col gap-5">
+                    <div id="additional-info-section" className="flex gap-4mt-4">
+                        <div id="additional-info-section-left" className="flex flex-5 flex-col gap-5">
                             <div className="flex flex-col gap-1">
                                 <div className="w-fit relative">
                                     <p className="text-xl font-bold">About {tutorProfile.user.firstName}</p>
@@ -206,7 +251,7 @@ export default function ProfilePage() {
                                         <textarea 
                                             value={aboutText}
                                             onChange={(e) => setAboutText(e.target.value)}
-                                            className="border border-gray-500 rounded-lg text-sm p-2 h-35 w-180 bg-white"
+                                            className="border border-gray-500 rounded-lg text-sm p-2 h-55 bg-white"
                                         />
                                         <div className="flex flex-col items-start justify-center">
                                             <button 
@@ -227,7 +272,7 @@ export default function ProfilePage() {
                                         </div>
                                     </form>
                                 ) : (
-                                    <p className="whitespace-pre-line text-sm">{tutorProfile?.bio}</p>
+                                    <p className="w-full whitespace-pre-line text-sm">{tutorProfile?.bio}</p>
                                 )}
                             </div>
 
@@ -272,8 +317,61 @@ export default function ProfilePage() {
                                 <p className="text-xl font-bold">Reviews</p>
                             </div>
                         </div>
-                        <div id="additional-info-section-right" className="flex flex-col gap-5 ml-10">
-                            {/* Additional right-side content can go here */}
+                        <div id="additional-info-section-right" className="flex flex-3 flex-col gap-1 ml-10">
+                            <h3 className="text-xl font-bold">Availability - <span className="text-lg">{currentTimePage > 3 ? 'PM' : 'AM'}</span></h3>
+                            <div className="grid grid-cols-8 gap-2">
+                                <button 
+                                    onClick={() => setCurrentTimePage(currentTimePage > 0 ? currentTimePage - 1 : 7)}
+                                    className="flex items-center justify-center font-semibold h-6 text-center cursor-pointer"
+                                >
+                                    &lt;
+                                </button>
+                                <div className="overflow-hidden col-span-6">
+                                    <div
+                                        className="flex transition-transform duration-300 ease-in-out"
+                                        style={{
+                                            transform: `translateX(-${currentTimePage * 100}%)`,
+                                        }}
+                                    >
+                                        {timePages.map((page, pageIndex) => (
+                                            <div key={pageIndex} className="grid grid-cols-6 gap-2 shrink-0 w-full">
+                                                {page.map((time, timeIndex) => (
+                                                    <div
+                                                        key={timeIndex}
+                                                        className="shrink-0 text-center font-semibold h-6"
+                                                    >
+                                                        {time}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div> 
+                                <button 
+                                    onClick={() => setCurrentTimePage(currentTimePage < 7 ? currentTimePage + 1 : 0)}
+                                    className="flex items-center justify-center font-semibold h-6 text-center cursor-pointer"
+                                >
+                                    &gt;
+                                </button>
+
+                                {days.map((day, dayIndex) => (
+                                    <React.Fragment key={day}>
+                                        <div className="flex items-center justify-center font-semibold h-10 text-center">{day}</div>
+                                        {Array.from({ length: 6 }).map((_, column) => {
+                                            const index = dayIndex * 6 + column;
+
+                                            return (
+                                                <div
+                                                    key={index}
+                                                    className={`h-10 cursor-pointer ${getCellSize(index, column)}`}
+                                                    onClick={() => toggleSquare(index)}
+                                                ></div>
+                                            );
+                                        })}
+                                        <div className="h-10"></div>
+                                    </React.Fragment>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </>
