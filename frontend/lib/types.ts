@@ -10,9 +10,10 @@ export type Location = {
 export type Availability = {
   id: number;
   tutorId: number;
-  dayOfWeek: number;
-  startTime: Date;
-  endTime: Date;
+  dayOfWeek?: number;
+  date?: string;
+  startTime: number;
+  endTime: number;
   timezone: string;
 };
 

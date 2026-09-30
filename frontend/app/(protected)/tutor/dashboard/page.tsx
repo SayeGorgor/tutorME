@@ -3,11 +3,13 @@
 import UpcomingSessionsCard from "@/components/UpcomingSessionsCard";
 import { useCurrentUser } from "@/lib/context/UserContext";
 
+import LoadingAnimation from "@/public/icons/loading_animation_icon.svg";
+
 export default function DashboardPage() {
     const { user, loading } = useCurrentUser();
 
     if (loading) {
-        return <p>Loading...</p>;
+        return <LoadingAnimation className="self-center mx-auto justify-self-center w-10 h-10" />;
     }
 
     return (

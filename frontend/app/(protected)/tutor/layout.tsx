@@ -8,7 +8,7 @@ export default function TutorLayout({
     return (
         <div className="flex min-h-screen max-w-screen bg-blue-50">
             <ProtectedTutorNav />
-            <main className="flex-1">
+            <main className="flex min-h-screen flex-1">
                 {children}
             </main>
         </div>
