@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, String, ForeignKey
+from sqlalchemy import BigInteger, String, ForeignKey, func, DateTime, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -27,6 +27,7 @@ class TutorProfile(Base):
     )
 
     price: Mapped[float] = mapped_column(
+        Float,
         nullable=False
     )
 
@@ -35,11 +36,11 @@ class TutorProfile(Base):
         cascade="all, delete-orphan"
     )
 
-    created_at: Mapped[str] = mapped_column(
-        String(255),
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True),
         nullable=False,
-        default="now()",
-        server_default="now()"
+        default=func.now(),
+        server_default=func.now()
     )
 
     user: Mapped["User"] = relationship(

@@ -14,7 +14,7 @@ export type Availability = {
   date?: string;
   startTime: number;
   endTime: number;
-  timezone: string;
+  timezone: Date;
 };
 
 export type Review = {
@@ -60,6 +60,7 @@ export type CreateUserSchema = {
 };
 
 export type TutorProfile = {
+  id: number;
   userId: number;
   intro: string;
   bio: string;

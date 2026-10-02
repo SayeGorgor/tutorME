@@ -31,7 +31,7 @@ export default function LoginPage() {
                 setHasError(true);
                 setSystemMessage("Login failed, please check your credentials and try again");
             } else {
-                const currentUser = await getCurrentUser();
+                const { data: currentUser } = await getCurrentUser();
                 if (currentUser) {
                     if(currentUser.role === "admin") {
                         router.push("/student/dashboard");

@@ -8,8 +8,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useCurrentUser } from "@/lib/context/UserContext";
-import { getTutorByUserId, updateTutorProfile } from "@/lib/api/actions/client-actions";
 import { TutorProfile } from "@/lib/types";
+import { 
+    getTutorByUserId, 
+    updateTutorProfile, 
+    updateTutorAvailability 
+} from "@/lib/api/actions/client-actions";
 
 import RatingStar from "@/components/RatingStar";
 import ChoiceArrowsIcon from "@/public/icons/choice_arrows_icon.svg";
@@ -21,16 +25,16 @@ import { AVAILABILITY_TIMES } from "@/constants/constants";
 type CustomTimeRange = {
     type: "custom";
     date: string;
-    start: number;
-    end: number;
+    startTime: number;
+    endTime: number;
     timezone: string;
 };
 
 type WeeklyTimeRange = {
     type: "weekly";
     dayOfTheWeek: number;
-    start: number;
-    end: number;
+    startTime: number;
+    endTime: number;
     timezone: string;
 };
 
@@ -88,11 +92,17 @@ export default function ProfilePage() {
         const fetchTutorProfile = async () => {
             if (user) {
                 setIsLoading(true);
-                const res = await getTutorByUserId(user.id);
-                console.log('Tutor Profile: ', res);
-                setTutorProfile(res);
-                setIntroText(res.intro);
-                setAboutText(res.bio);
+                const { data, error } = await getTutorByUserId(user.id);
+                if(error) {
+                    setHasError(true);
+                    setSystemMessage(error.message);
+                    setIsLoading(false);
+                    return;
+                }
+
+                setTutorProfile(data ?? null);
+                setIntroText(data?.intro ?? "");
+                setAboutText(data?.bio ?? "");
                 setIsLoading(false);
             }
         };
@@ -189,17 +199,17 @@ export default function ProfilePage() {
                     (range.type === "weekly" && indexes.type === "weekly" && range.dayOfTheWeek === indexes.dayIndex) || 
                     (range.type === "custom" && indexes.type === "custom" && range.date === indexes.date)
                 ) && 
-                timeIndex >= range.start && 
-                timeIndex <= range.end
+                timeIndex >= range.startTime && 
+                timeIndex <= range.endTime
             );
 
             if(!range) { //Handle adding new availability range
                 if(indexes.type === "weekly") {
                     const leftRange = availabilityTimeRanges.find((range) => 
-                        range.type === "weekly" && range.dayOfTheWeek === indexes.dayIndex && range.end === (timeIndex - 30)
+                        range.type === "weekly" && range.dayOfTheWeek === indexes.dayIndex && range.endTime === (timeIndex - 30)
                     );
                     const rightRange = availabilityTimeRanges.find((range) => 
-                        range.type === "weekly" && range.dayOfTheWeek === indexes.dayIndex && range.start === (timeIndex + 30)
+                        range.type === "weekly" && range.dayOfTheWeek === indexes.dayIndex && range.startTime === (timeIndex + 30)
                     );
                     
                     if(leftRange && rightRange) {
@@ -207,8 +217,8 @@ export default function ProfilePage() {
                         prev.push({
                             type: "weekly",
                             dayOfTheWeek: indexes.dayIndex,
-                            start: leftRange.start,
-                            end: rightRange.end,
+                            startTime: leftRange.startTime,
+                            endTime: rightRange.endTime,
                             timezone: user.timezone
                         });
                         return prev;
@@ -219,8 +229,8 @@ export default function ProfilePage() {
                         prev.push({
                             type: "weekly",
                             dayOfTheWeek: indexes.dayIndex,
-                            start: leftRange.start,
-                            end: timeIndex,
+                            startTime: leftRange.startTime,
+                            endTime: timeIndex,
                             timezone: user.timezone
                         });
                         return prev;
@@ -231,8 +241,8 @@ export default function ProfilePage() {
                         prev.push({
                             type: "weekly",
                             dayOfTheWeek: indexes.dayIndex,
-                            start: timeIndex,
-                            end: rightRange.end,
+                            startTime: timeIndex,
+                            endTime: rightRange.endTime,
                             timezone: user.timezone
                         });
                         return prev;
@@ -241,17 +251,17 @@ export default function ProfilePage() {
                     return [...prev, {
                         type: "weekly",
                         dayOfTheWeek: indexes.dayIndex,
-                        start: timeIndex,
-                        end: timeIndex,
+                        startTime: timeIndex,
+                        endTime: timeIndex,
                         timezone: user.timezone
                     }];
                 }
 
                 const leftRange = availabilityTimeRanges.find((range) => 
-                    range.type === "custom" && range.date === indexes.date && range.end === (timeIndex - 30)
+                    range.type === "custom" && range.date === indexes.date && range.endTime === (timeIndex - 30)
                 );
                 const rightRange = availabilityTimeRanges.find((range) => 
-                    range.type === "custom" && range.date === indexes.date && range.start === (timeIndex + 30)
+                    range.type === "custom" && range.date === indexes.date && range.startTime === (timeIndex + 30)
                 );
                 
                 if(leftRange && rightRange) {
@@ -259,8 +269,8 @@ export default function ProfilePage() {
                     prev.push({
                         type: "custom",
                         date: indexes.date,
-                        start: leftRange.start,
-                        end: rightRange.end,
+                        startTime: leftRange.startTime,
+                        endTime: rightRange.endTime,
                         timezone: user.timezone
                     });
                     return prev;
@@ -271,8 +281,8 @@ export default function ProfilePage() {
                     prev.push({
                         type: "custom",
                         date: indexes.date,
-                        start: leftRange.start,
-                        end: timeIndex,
+                        startTime: leftRange.startTime,
+                        endTime: timeIndex,
                         timezone: user.timezone
                     });
                     return prev;
@@ -283,8 +293,8 @@ export default function ProfilePage() {
                     prev.push({
                         type: "custom",
                         date: indexes.date,
-                        start: timeIndex,
-                        end: rightRange.end,
+                        startTime: timeIndex,
+                        endTime: rightRange.endTime,
                         timezone: user.timezone
                     });
                     return prev;
@@ -293,14 +303,14 @@ export default function ProfilePage() {
                 return [...prev, {
                     type: "custom",
                     date: indexes.date,
-                    start: timeIndex,
-                    end: timeIndex,
+                    startTime: timeIndex,
+                    endTime: timeIndex,
                     timezone: user.timezone
                 }];
             }
 
-            const hasLeft = timeIndex > range.start;
-            const hasRight = timeIndex < range.end;
+            const hasLeft = timeIndex > range.startTime;
+            const hasRight = timeIndex < range.endTime;
 
             if(hasLeft && hasRight) {
                 prev = prev.filter((prevRange) => prevRange !== range);
@@ -308,16 +318,16 @@ export default function ProfilePage() {
                     const leftRange = {
                         type: range.type,
                         dayOfTheWeek: range.dayOfTheWeek,
-                        start: range.start,
-                        end: timeIndex - 30,
+                        startTime: range.startTime,
+                        endTime: timeIndex - 30,
                         timezone: user.timezone,
                     };
 
                     const rightRange = {
                         type: range.type,
                         dayOfTheWeek: range.dayOfTheWeek,
-                        start: timeIndex + 30,
-                        end: range.end,
+                        startTime: timeIndex + 30,
+                        endTime: range.endTime,
                         timezone: user.timezone,
                     };
                     return [...prev, leftRange, rightRange];
@@ -326,16 +336,16 @@ export default function ProfilePage() {
                 const leftRange = {
                     type: range.type,
                     date: range.date,
-                    start: range.start,
-                    end: timeIndex - 30,
+                    startTime: range.startTime,
+                    endTime: timeIndex - 30,
                     timezone: user.timezone,
                 };
 
                 const rightRange = {
                     type: range.type,
                     date: range.date,
-                    start: timeIndex + 30,
-                    end: range.end,
+                    startTime: timeIndex + 30,
+                    endTime: range.endTime,
                     timezone: user.timezone,
                 };
 
@@ -349,8 +359,8 @@ export default function ProfilePage() {
                     const leftRange = {
                         type: range.type,
                         dayOfTheWeek: range.dayOfTheWeek,
-                        start: range.start,
-                        end: timeIndex - 30,
+                        startTime: range.startTime,
+                        endTime: timeIndex - 30,
                         timezone: user.timezone,
                     };
 
@@ -360,8 +370,8 @@ export default function ProfilePage() {
                 const leftRange = {
                     type: range.type,
                     date: range.date,
-                    start: range.start,
-                    end: timeIndex - 30,
+                    startTime: range.startTime,
+                    endTime: timeIndex - 30,
                     timezone: user.timezone,
                 };
 
@@ -375,8 +385,8 @@ export default function ProfilePage() {
                     const rightRange = {
                         type: range.type,
                         dayOfTheWeek: range.dayOfTheWeek,
-                        start: timeIndex + 30,
-                        end: range.end,
+                        startTime: timeIndex + 30,
+                        endTime: range.endTime,
                         timezone: user.timezone,
                     };
 
@@ -386,8 +396,8 @@ export default function ProfilePage() {
                 const rightRange = {
                     type: range.type,
                     date: range.date,
-                    start: timeIndex + 30,
-                    end: range.end,
+                    startTime: timeIndex + 30,
+                    endTime: range.endTime,
                     timezone: user.timezone,
                 };
 
@@ -628,14 +638,18 @@ export default function ProfilePage() {
                                     <button 
                                         type="submit"
                                         className="text-green-800 cursor-pointer hover:underline"
+                                        onClick={async() => {
+                                            await updateTutorAvailability({tutorID: tutorProfile.id, availabilityData: { availability: availabilityTimeRanges }});
+                                        }}
+
+                                        /* UNPROCESSABLE ENTITY ERROR, CHECK ROUTE!! */
                                     >
                                         Save
                                     </button>
                                     <button 
                                         className="text-red-500 cursor-pointer hover:underline"
                                         onClick={() => {
-                                            setIsEditingAbout(false);
-                                            setAboutText(tutorProfile.bio);
+                                            console.log('Availabilities: ', availabilityTimeRanges);
                                         }}
                                     >
                                         Cancel  

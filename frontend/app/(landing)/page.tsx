@@ -8,7 +8,7 @@ import Image from "next/image";
 import { getSubjects } from "@/lib/api/actions/client-actions";
 import type { Location } from "@/lib/types";
 import type { Subject } from "@/lib/types";
-import { searchLocations } from "@/lib/api/actions/client-actions";
+// import { searchLocations } from "@/lib/api/actions/client-actions";
 
 type SubjectCategory = {
   name: string;
@@ -69,9 +69,8 @@ export default function Home() {
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        const subjectsData = await getSubjects();
-        const subjectByCategory = subjectsData
-          .reduce<Record<string, Subject[]>>((groups, subject) => {
+        const { data: subjectsData } = await getSubjects();
+        const subjectByCategory = subjectsData?.reduce<Record<string, Subject[]>>((groups, subject) => {
             if(!groups[subject.category]) {
               groups[subject.category] = [];
             }
@@ -83,7 +82,7 @@ export default function Home() {
           {}
         );
 
-        setSubjectCategories(Object.entries(subjectByCategory).map(([category, subjects]) => ({
+        setSubjectCategories(Object.entries(subjectByCategory ?? {}).map(([category, subjects]) => ({
           name: category,
           subjects,
         })));

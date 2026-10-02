@@ -1,22 +1,15 @@
+import type { APIResponse } from "@/lib/types";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type ApiFetchOptions = Omit<RequestInit, 'body'> & {
   body?: unknown;
 };
 
-export class ApiError extends Error {
-  status: number;
-
-  constructor(status: number, message: string) {
-    super(message);
-    this.status = status;
-  }
-}
-
 export async function apiFetch<T>(
     endpoint: string, 
     options?: ApiFetchOptions
-): Promise<T> {
+): Promise<APIResponse<T>> {
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers: {
@@ -36,8 +29,10 @@ export async function apiFetch<T>(
       // Ignore JSON parsing errors and use the default message
     }
 
-    throw new ApiError(response.status, message);
+    return { error: { status: response.status, message } };
   }
 
-  return response.json() as Promise<T>;
+  const data = await response.json() as T;
+
+  return { data };
 }

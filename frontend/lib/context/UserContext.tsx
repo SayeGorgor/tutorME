@@ -20,9 +20,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         const fetchUser = async () => {
+            const { data: currentUserData } = await getCurrentUser();
             try {
-                const currentUser = await getCurrentUser();
-                setUser(currentUser);
+                setUser(currentUserData ?? null);
             } catch (error) {
                 setUser(null);
             } finally {

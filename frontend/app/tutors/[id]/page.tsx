@@ -17,20 +17,28 @@ export default function TutorProfilePage({
     
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(null);
+    const [hasError, setHasError] = useState(false);
+    const [sysMessage, setSysMessage] = useState("");
     const [id, setId] = useState<number | null>(null);
     
     useEffect(() => {
         const fetchTutorProfile = async () => {
             const { id } = await params;
             setIsLoading(true);
-            try {
-                const tutorProfileData = await getTutorByUserId(id);
-                setTutorProfile(tutorProfileData);
-            } catch (error) {
+
+            const { data: tutorProfileData, error } = await getTutorByUserId(id);
+            if (error) {
                 console.error("Error fetching tutor profile:", error);
-            } finally {
+                setHasError(true);
+                setSysMessage(error.message);
                 setIsLoading(false);
+                return;
             }
+            
+            setTutorProfile(tutorProfileData ?? null);
+            setHasError(false);
+            setSysMessage("");
+            setIsLoading(false);
         };
         fetchTutorProfile();
     }, [params]);

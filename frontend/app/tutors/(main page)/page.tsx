@@ -19,17 +19,25 @@ export default function TutorsPage() {
 
     const [maxDistance, setMaxDistance] = useState(25);
     const [tutors, setTutors] = useState<TutorProfile[]>([]);
+
+    const [hasError, setHasError] = useState(false);
+    const [sysMessage, setSysMessage] = useState("");
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchTutors = async () => {
             setIsLoading(true);
-            try {
-                const tutorData = await getTutors();
-                setTutors(tutorData);
-            } catch (error) {
-                console.error("Failed to fetch tutors:", error);
+            const { data: tutorData, error } = await getTutors();
+            if (error) {
+                setHasError(true);
+                setSysMessage(error.message);
+                setIsLoading(false);
+                return;
             }
+
+            setTutors(tutorData ?? []);
+            setHasError(false);
+            setSysMessage("");
             setIsLoading(false);
         };
         fetchTutors();
