@@ -16,8 +16,10 @@ class TutorAvailability(TutorAvailabilityBase):
 
 class TutorAvailabilitySummary(APIModel):
     id: int
+    type: str
     tutor_id: int
-    day_of_the_week: int
+    day_of_the_week: int | None = None
+    date: str | None = None
     start_time: int
     end_time: int
     timezone: str

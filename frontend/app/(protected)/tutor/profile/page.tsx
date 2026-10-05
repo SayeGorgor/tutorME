@@ -1,14 +1,14 @@
 'use client';
 
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useCurrentUser } from "@/lib/context/UserContext";
-import { TutorProfile } from "@/lib/types";
+import { TutorProfile, UpdateTutorAvailabilitySchema } from "@/lib/types";
 import { 
     getTutorByUserId, 
     updateTutorProfile, 
@@ -42,14 +42,12 @@ type AvailabilityTimeRange = WeeklyTimeRange | CustomTimeRange;
 
 type toggleSquaresWeeklyInput = {
     type: "weekly";
-    calendarIndex: number;
     timeIndex: number;
     dayIndex: number;
 };
 
 type toggleSquaresCustomInput = {
     type: "custom";
-    calendarIndex: number;
     timeIndex: number;
     date: string;
 };
@@ -63,6 +61,8 @@ export default function ProfilePage() {
     const times = AVAILABILITY_TIMES;
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+    const dateInputRef = useRef<HTMLInputElement>(null);
+
     const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(null);
     const [isEditingIntro, setIsEditingIntro] = useState(false);
     const [introText, setIntroText] = useState("");
@@ -74,9 +74,14 @@ export default function ProfilePage() {
     const [hasError, setHasError] = useState(false);
     const [systemMessage, setSystemMessage] = useState("");
 
+    const [isLoadingAvailabilityUpdate, setIsLoadingAvailabilityUpdate] = useState(false);
+    const [availabilityUpdateMessage, setAvailabilityUpdateMessage] = useState("");
+    const [showCalendar, setShowCalendar] = useState(false);
+
     const [availabilityTimeRanges, setAvailabilityTimeRanges] = useState<AvailabilityTimeRange[]>([]);
-    const [activeSquares, setActiveSquares] = useState<Set<number>>(new Set());
+    const [originalAvailabilityTimeRanges, setOriginalAvailabilityTimeRanges] = useState<AvailabilityTimeRange[]>([]);
     const [availabilityType, setAvailabilityType] = useState<"weekly" | "custom">("weekly");
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString());
     const [showAvailabilityTypeDropdown, setShowAvailabilityTypeDropdown] = useState(false);
     const [availabilityWeekDates, setAvailabilityWeekDates] = useState<Date[]>([]);
     const [currentTimePage, setCurrentTimePage] = useState(0);
@@ -87,6 +92,30 @@ export default function ProfilePage() {
             i * 6 + 6
         )
     );
+
+    const normalizeRanges = (ranges: AvailabilityTimeRange[]) =>
+        [...ranges].sort((a, b) => {
+            if (a.type !== b.type) {
+                return a.type.localeCompare(b.type);
+            }
+
+            if (a.type === "weekly" && b.type === "weekly") {
+                if (a.dayOfTheWeek !== b.dayOfTheWeek) {
+                    return a.dayOfTheWeek - b.dayOfTheWeek;
+                }
+            }
+
+            if (a.type === "custom" && b.type === "custom") {
+                if (a.date !== b.date) {
+                    return a.date.localeCompare(b.date);
+                }
+            }
+
+            return a.startTime - b.startTime;
+        }
+    );
+
+    const isEditingAvailability = JSON.stringify(normalizeRanges(availabilityTimeRanges)) !== JSON.stringify(normalizeRanges(originalAvailabilityTimeRanges));
 
     useEffect(() => {
         const fetchTutorProfile = async () => {
@@ -103,11 +132,25 @@ export default function ProfilePage() {
                 setTutorProfile(data ?? null);
                 setIntroText(data?.intro ?? "");
                 setAboutText(data?.bio ?? "");
+                const availabilities = (data?.availability ?? []).map(
+                    ({id, tutorId, ...availability}) => availability
+                );
+
+                setAvailabilityTimeRanges(availabilities);
+                setOriginalAvailabilityTimeRanges(availabilities);
                 setIsLoading(false);
             }
         };
         fetchTutorProfile();
     }, [user]);
+
+    const formatToDateString = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+    };
 
     const saveIntroChange = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -177,23 +220,12 @@ export default function ProfilePage() {
     // };
 
     const toggleSquare = (indexes: toggleSquaresInput) => {
-        const { calendarIndex, timeIndex } = indexes;
+        const { timeIndex } = indexes;
 
         if(!user) return;
 
-        setActiveSquares((prev) => {
-            const next = new Set(prev);
-
-            if(next.has(calendarIndex)) {
-                next.delete(calendarIndex);
-            } else {
-                next.add(calendarIndex);
-            }
-
-            return next;
-        });
-
         setAvailabilityTimeRanges((prev) => {
+            //Determine if cell is within an existing availability range
             const range = prev.find((range) => 
                 (
                     (range.type === "weekly" && indexes.type === "weekly" && range.dayOfTheWeek === indexes.dayIndex) || 
@@ -213,39 +245,42 @@ export default function ProfilePage() {
                     );
                     
                     if(leftRange && rightRange) {
-                        prev = prev.filter((range) => range !== leftRange && range !== rightRange);
-                        prev.push({
-                            type: "weekly",
-                            dayOfTheWeek: indexes.dayIndex,
-                            startTime: leftRange.startTime,
-                            endTime: rightRange.endTime,
-                            timezone: user.timezone
-                        });
-                        return prev;
+                        return [
+                            ...prev.filter((range) => range !== leftRange && range !== rightRange),
+                            {
+                                type: "weekly",
+                                dayOfTheWeek: indexes.dayIndex,
+                                startTime: leftRange.startTime,
+                                endTime: rightRange.endTime,
+                                timezone: user.timezone
+                            }
+                        ];
                     }
 
                     if(leftRange) {
-                        prev = prev.filter((range) => range !== leftRange);
-                        prev.push({
-                            type: "weekly",
-                            dayOfTheWeek: indexes.dayIndex,
-                            startTime: leftRange.startTime,
-                            endTime: timeIndex,
-                            timezone: user.timezone
-                        });
-                        return prev;
+                        return [
+                            ...prev.filter((range) => range !== leftRange),
+                            {
+                                type: "weekly",
+                                dayOfTheWeek: indexes.dayIndex,
+                                startTime: leftRange.startTime,
+                                endTime: timeIndex,
+                                timezone: user.timezone
+                            }
+                        ];
                     }
 
                     if(rightRange) {
-                        prev = prev.filter((range) => range !== rightRange);
-                        prev.push({
-                            type: "weekly",
-                            dayOfTheWeek: indexes.dayIndex,
-                            startTime: timeIndex,
-                            endTime: rightRange.endTime,
-                            timezone: user.timezone
-                        });
-                        return prev;
+                        return [
+                            ...prev.filter((range) => range !== rightRange),
+                            {
+                                type: "weekly",
+                                dayOfTheWeek: indexes.dayIndex,
+                                startTime: timeIndex,
+                                endTime: rightRange.endTime,
+                                timezone: user.timezone
+                            }
+                        ];
                     }
 
                     return [...prev, {
@@ -263,52 +298,59 @@ export default function ProfilePage() {
                 const rightRange = availabilityTimeRanges.find((range) => 
                     range.type === "custom" && range.date === indexes.date && range.startTime === (timeIndex + 30)
                 );
-                
+
                 if(leftRange && rightRange) {
-                    prev = prev.filter((range) => range !== leftRange && range !== rightRange);
-                    prev.push({
-                        type: "custom",
-                        date: indexes.date,
-                        startTime: leftRange.startTime,
-                        endTime: rightRange.endTime,
-                        timezone: user.timezone
-                    });
-                    return prev;
+                    return [
+                        ...prev.filter((range) => range !== leftRange && range !== rightRange),
+                        {
+                            type: "custom",
+                            date: indexes.date,
+                            startTime: leftRange.startTime,
+                            endTime: rightRange.endTime,
+                            timezone: user.timezone
+                        }
+                    ];
                 }
 
                 if(leftRange) {
-                    prev = prev.filter((range) => range !== leftRange);
-                    prev.push({
-                        type: "custom",
-                        date: indexes.date,
-                        startTime: leftRange.startTime,
-                        endTime: timeIndex,
-                        timezone: user.timezone
-                    });
-                    return prev;
+                    return [
+                        ...prev.filter((range) => range !== leftRange),
+                        {
+                            type: "custom",
+                            date: indexes.date,
+                            startTime: leftRange.startTime,
+                            endTime: timeIndex,
+                            timezone: user.timezone
+                        }
+                    ];
                 }
 
                 if(rightRange) {
-                    prev = prev.filter((range) => range !== rightRange);
-                    prev.push({
+                    return [
+                        ...prev.filter((range) => range !== rightRange),
+                        {
+                            type: "custom",
+                            date: indexes.date,
+                            startTime: timeIndex,
+                            endTime: rightRange.endTime,
+                            timezone: user.timezone
+                        }
+                    ];
+                }
+
+                return [
+                    ...prev,
+                    {
                         type: "custom",
                         date: indexes.date,
                         startTime: timeIndex,
-                        endTime: rightRange.endTime,
+                        endTime: timeIndex,
                         timezone: user.timezone
-                    });
-                    return prev;
-                }
-
-                return [...prev, {
-                    type: "custom",
-                    date: indexes.date,
-                    startTime: timeIndex,
-                    endTime: timeIndex,
-                    timezone: user.timezone
-                }];
+                    }
+                ];
             }
 
+            // Deletion logic
             const hasLeft = timeIndex > range.startTime;
             const hasRight = timeIndex < range.endTime;
 
@@ -409,14 +451,10 @@ export default function ProfilePage() {
         });
     }
 
-    const getCellSize = (index: number, column: number) => {
-        const isActive = activeSquares.has(index);
+    const getCellSize = (isActive: boolean, hasLeftNeighbor: boolean, hasRightNeighbor: boolean) => {
 
         if(!isActive) return "rounded-2xl border border-black"
-
-        const hasLeftNeighbor = column > 0 && activeSquares.has(index - 1);
-        const hasRightNeighbor = activeSquares.has(index + 1);
-
+        
         return `
             bg-blue-500
             ${hasLeftNeighbor ? "-ml-2 pl-2 rounded-l-none border-l-0" : "rounded-l-2xl"}
@@ -425,22 +463,48 @@ export default function ProfilePage() {
         `
     }
 
-    const getStartofWeek = (date: Date) => {
-        const day = date.getDay();
-        const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-        return new Date(date.setDate(diff)).setHours(0, 0, 0, 0);
+    const getWeekDates = (selectedDate: string) => {
+        const [year, month, day] = selectedDate.split("-").map(Number);
+
+        const date = new Date(year, month - 1, day);
+        const startOfWeek = new Date(date);
+
+        startOfWeek.setDate(date.getDate() - date.getDay());
+
+        return Array.from({ length: 7 }, (_, i) => {
+            const currentDate = new Date(startOfWeek);
+            currentDate.setDate(startOfWeek.getDate() + i);
+
+            return currentDate;
+        });
     };
 
-    const getWeekDates = (startOfWeek: Date) => {
-        const dates = [];
-        for (let i = 0; i < 7; i++) {
-            const date = new Date(startOfWeek);
-            date.setDate(startOfWeek.getDate() + i);
-            dates.push(date);
+    const weekDates = getWeekDates(selectedDate);
+
+    const handleAvailabilityUpdate = async(updateData: UpdateTutorAvailabilitySchema) => {
+        setIsLoadingAvailabilityUpdate(true);
+        const { data, error } = await updateTutorAvailability(updateData);
+        setIsLoadingAvailabilityUpdate(false);
+        if(error) {
+            setHasError(true);
+            setAvailabilityUpdateMessage("Availability Update Failed");
+            return setTimeout(() => {
+                setHasError(false);
+                setAvailabilityUpdateMessage("");
+            }, 3000);
         }
         
-        setAvailabilityWeekDates(dates);
-    };
+        const availabilities = (data ?? []).map(
+            ({id, tutorId, ...availability}) => availability
+        );
+
+        setAvailabilityTimeRanges(availabilities);
+        setOriginalAvailabilityTimeRanges(availabilities);
+        setAvailabilityUpdateMessage("Availability Updated");
+        setTimeout(() => {
+            setAvailabilityUpdateMessage("");
+        }, 3000);
+    }
 
     return (
         <div className="flex flex-1 flex-col gap-6 px-10 py-6 h-full w-full">
@@ -630,31 +694,35 @@ export default function ProfilePage() {
                                 <p className="text-xl font-bold">Reviews</p>
                             </div>
                         </div>
-                        <div id="additional-info-section-right" className="flex flex-3 flex-col gap-1 ml-10">
+                        <div id="additional-info-section-right" className="flex flex-3 flex-col justify-center gap-1 ml-10">
                             <div className="flex justify-between">
                                 <h3 className="text-xl font-bold">Availability - <span className="text-lg">{currentTimePage > 3 ? 'PM' : 'AM'}</span></h3>
 
-                                <div className="flex gap-2 mr-2">
-                                    <button 
-                                        type="submit"
-                                        className="text-green-800 cursor-pointer hover:underline"
-                                        onClick={async() => {
-                                            await updateTutorAvailability({tutorID: tutorProfile.id, availabilityData: { availability: availabilityTimeRanges }});
-                                        }}
-
-                                        /* UNPROCESSABLE ENTITY ERROR, CHECK ROUTE!! */
-                                    >
-                                        Save
-                                    </button>
-                                    <button 
-                                        className="text-red-500 cursor-pointer hover:underline"
-                                        onClick={() => {
-                                            console.log('Availabilities: ', availabilityTimeRanges);
-                                        }}
-                                    >
-                                        Cancel  
-                                    </button>
-                                </div>
+                                {availabilityUpdateMessage ? (
+                                    <p className={`text-md ${hasError ? 'text-red-500' : 'text-green-700'}`}>{availabilityUpdateMessage}</p>
+                                ) : (
+                                    isEditingAvailability && (
+                                        <div className="flex items-center gap-2 mr-2">
+                                            <button 
+                                                type="submit"
+                                                className="text-green-800 cursor-pointer hover:underline"
+                                                onClick={async() => handleAvailabilityUpdate({tutorID: tutorProfile.id, availabilityData: { availability: availabilityTimeRanges }})}
+                                            >
+                                                Save
+                                            </button>
+                                            {isLoadingAvailabilityUpdate ? (
+                                                <LoadingAnimationIcon className="w-5 h-5" />
+                                            ) : (
+                                                <button 
+                                                    className="text-red-500 cursor-pointer hover:underline"
+                                                    onClick={() => setAvailabilityTimeRanges(originalAvailabilityTimeRanges)}
+                                                >
+                                                    Cancel  
+                                                </button>
+                                            )}
+                                        </div>
+                                    )
+                                )}
                             </div>
 
                             
@@ -697,9 +765,33 @@ export default function ProfilePage() {
                                     </div>
 
                                     {availabilityType === "custom" && (
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="text-lg font-semibold">Sep 6 - Sep 12, 2026</h3>
-                                            <CalendarIcon className="w-6 h-6 cursor-pointer" />
+                                        <div className="flex gap-2">
+                                            <h3 className="text-lg items-center font-semibold">
+                                                {weekDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {weekDates[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, {weekDates[6].getFullYear()}
+                                            </h3>
+                                            <div>
+                                                <button 
+                                                    onClick={() => dateInputRef.current?.showPicker()}
+                                                    className="cursor-pointer"
+                                                    aria-label="Select date"
+                                                >
+                                                    <CalendarIcon className="w-6 h-6" />
+                                                </button>
+                                                <input
+                                                    ref={dateInputRef}
+                                                    type="date"
+                                                    value={selectedDate}
+                                                    onChange={(e) => setSelectedDate(e.target.value)}
+                                                    className="sr-only"
+                                                />
+                                            </div>
+                                            {showCalendar && (
+                                                <input
+                                                    type="date"
+                                                    value={selectedDate}
+                                                    onChange={(e) => setSelectedDate(e.target.value)}
+                                                />
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -738,29 +830,113 @@ export default function ProfilePage() {
                                     &gt;
                                 </button>
 
-                                {days.map((day, dayIndex) => (
-                                    <React.Fragment key={day}>
-                                        <div className="flex items-center justify-center font-semibold h-10 text-center">{day}</div>
-                                        {Array.from({ length: 6 }).map((_, column) => {
-                                            const calendarIndex = dayIndex * 6 + column;
-                                            const timeIndex = 6 * currentTimePage * 30 + column * 30;
+                                {availabilityType === 'weekly' ? (
+                                    days.map((day, dayIndex) => (
+                                        <React.Fragment key={day}>
+                                            <div className="flex items-center justify-center font-semibold h-10 text-center">{day}</div>
+                                            {Array.from({ length: 6 }).map((_, column) => {
+                                                const calendarIndex = dayIndex * 6 + column;
+                                                const timeIndex = 6 * currentTimePage * 30 + column * 30;
 
-                                            return (
-                                                <div
-                                                    key={calendarIndex}
-                                                    className={`h-10 cursor-pointer ${getCellSize(calendarIndex, column)}`}
-                                                    onClick={() => toggleSquare({
-                                                        calendarIndex,
-                                                        timeIndex,
-                                                        dayIndex,
-                                                        type: 'weekly'
-                                                    })}
-                                                ></div>
-                                            );
-                                        })}
-                                        <div className="h-10"></div>
-                                    </React.Fragment>
-                                ))}
+                                                const isActive = availabilityTimeRanges.some(availability =>
+                                                    availability.type === "weekly" &&
+                                                    availability.dayOfTheWeek === dayIndex &&
+                                                    availability.startTime <= timeIndex &&
+                                                    availability.endTime >= timeIndex
+                                                );
+
+                                                const leftTimeIndex = timeIndex - 30;
+                                                const rightTimeIndex = timeIndex + 30;
+
+                                                const hasLeftNeighbor =
+                                                    column > 0 &&
+                                                    availabilityTimeRanges.some(availability =>
+                                                        availability.type === "weekly" &&
+                                                        availability.dayOfTheWeek === dayIndex &&
+                                                        availability.startTime <= leftTimeIndex &&
+                                                        availability.endTime >= leftTimeIndex
+                                                    );
+
+                                                const hasRightNeighbor =
+                                                    column < 5 &&
+                                                    availabilityTimeRanges.some(availability =>
+                                                        availability.type === "weekly" &&
+                                                        availability.dayOfTheWeek === dayIndex &&
+                                                        availability.startTime <= rightTimeIndex &&
+                                                        availability.endTime >= rightTimeIndex
+                                                    );
+
+                                                return (
+                                                    <div
+                                                        key={calendarIndex}
+                                                        className={`h-10 cursor-pointer ${getCellSize(isActive, hasLeftNeighbor, hasRightNeighbor)}`}
+                                                        onClick={() => toggleSquare({
+                                                            timeIndex,
+                                                            dayIndex,
+                                                            type: 'weekly'
+                                                        })}
+                                                    ></div>
+                                                );
+                                            })}
+                                            <div className="h-10"></div>
+                                        </React.Fragment>
+                                    )))
+                                : (
+                                    weekDates.map((date, dateIndex) => (
+                                        <React.Fragment key={dateIndex}>
+                                            <div className="flex items-center justify-center font-semibold h-10 text-center">
+                                                {date.toLocaleDateString('en-US', {
+                                                    weekday: 'short'
+                                                })}
+                                            </div>
+                                            {Array.from({ length: 6 }).map((_, column) => {
+                                                const calendarIndex = dateIndex * 6 + column;
+                                                const timeIndex = 6 * currentTimePage * 30 + column * 30;
+
+                                                const isActive = availabilityTimeRanges.some(availability =>
+                                                    availability.type === "custom" &&
+                                                    availability.date === formatToDateString(date) &&
+                                                    availability.startTime <= timeIndex &&
+                                                    availability.endTime >= timeIndex
+                                                );
+
+                                                const leftTimeIndex = timeIndex - 30;
+                                                const rightTimeIndex = timeIndex + 30;
+
+                                                const hasLeftNeighbor =
+                                                    column > 0 &&
+                                                    availabilityTimeRanges.some(availability =>
+                                                        availability.type === "custom" &&
+                                                        availability.date === formatToDateString(date) &&
+                                                        availability.startTime <= leftTimeIndex &&
+                                                        availability.endTime >= leftTimeIndex
+                                                    );
+
+                                                const hasRightNeighbor =
+                                                    column < 5 &&
+                                                    availabilityTimeRanges.some(availability =>
+                                                        availability.type === "custom" &&
+                                                        availability.date === formatToDateString(date) &&
+                                                        availability.startTime <= rightTimeIndex &&
+                                                        availability.endTime >= rightTimeIndex
+                                                    );
+
+                                                return (
+                                                    <div
+                                                        key={calendarIndex}
+                                                        className={`h-10 cursor-pointer ${getCellSize(isActive, hasLeftNeighbor, hasRightNeighbor)}`}
+                                                        onClick={() => toggleSquare({
+                                                            timeIndex,
+                                                            date: formatToDateString(date),
+                                                            type: 'custom'
+                                                        })}
+                                                    ></div>
+                                                );
+                                            })}
+                                            <div className="flex items-center justify-center font-semibold h-10 text-center">{date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })}</div>
+                                        </React.Fragment>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>

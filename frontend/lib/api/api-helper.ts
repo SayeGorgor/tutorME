@@ -10,29 +10,33 @@ export async function apiFetch<T>(
     endpoint: string, 
     options?: ApiFetchOptions
 ): Promise<APIResponse<T>> {
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options?.headers || {}),
-    },
-    body: options?.body ? JSON.stringify(options.body) : undefined,
-  });
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.headers || {}),
+      },
+      body: options?.body ? JSON.stringify(options.body) : undefined,
+    });
 
-  if (!response.ok) {
-    let message = `Something went wrong`;
+    if (!response.ok) {
+      let message = `Something went wrong`;
 
-    try {
-      const errorData = await response.json();
-      if(errorData.detail) { message = errorData.detail;}
-    } catch (error) {
-      // Ignore JSON parsing errors and use the default message
+      try {
+        const errorData = await response.json();
+        if(errorData.detail) { message = errorData.detail;}
+      } catch (error) {
+        // Ignore JSON parsing errors and use the default message
+      }
+
+      return { error: { status: response.status, message } };
     }
 
-    return { error: { status: response.status, message } };
+    const data = await response.json() as T;
+
+    return { data };
+  } catch (error) {
+    return { error: { status: 500, message: 'Internal Server Error' } };
   }
-
-  const data = await response.json() as T;
-
-  return { data };
 }

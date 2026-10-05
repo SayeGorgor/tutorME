@@ -7,15 +7,27 @@ export type Location = {
     longitude: number;
 }
 
-export type Availability = {
+export type WeeklyAvailability = {
   id: number;
   tutorId: number;
-  dayOfWeek?: number;
-  date?: string;
+  type: "weekly";
+  dayOfTheWeek: number;
   startTime: number;
   endTime: number;
-  timezone: Date;
+  timezone: string;
 };
+
+export type CustomAvailability = {
+  id: number;
+  tutorId: number;
+  type: "custom";
+  date: string;
+  startTime: number;
+  endTime: number;
+  timezone: string;
+};
+
+export type Availability = WeeklyAvailability | CustomAvailability;
 
 export type Review = {
   id: number;
@@ -76,6 +88,20 @@ export type UpdateTutorProfileSchema = {
     bio?: string;
     price?: number;
     availability?: Availability[];
+  }
+};
+
+export type UpdateTutorAvailabilitySchema = {
+  tutorID: number;
+  availabilityData: {
+    availability: {
+      type: "weekly" | "custom";
+      dayOfTheWeek?: number;
+      date?: string;
+      startTime: number;
+      endTime: number;
+      timezone: string;
+    }[]
   }
 };
 

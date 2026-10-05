@@ -9,22 +9,9 @@ import {
   CreateUserSchema, 
   Availability,
   APIError,
-  APIResponse
+  APIResponse,
+  UpdateTutorAvailabilitySchema
 } from "@/lib/types";
-
-type UpdateTutorAvailabilitySchema = {
-  tutorID: number;
-  availabilityData: {
-    availability: {
-      type: "weekly" | "custom";
-      dayOfTheWeek?: number;
-      date?: string;
-      startTime: number;
-      endTime: number;
-      timezone: string;
-    }[]
-  }
-};
 
 /* LOCATION ACTIONS */
 // export const searchLocations = async (search: string): Promise<any[]> => {
@@ -134,7 +121,7 @@ export const updateTutorAvailability = async (inputData: UpdateTutorAvailability
   try {
     const { data: tokenData } = await authClient.token();
     
-    const { data: response, error} = await apiFetch<Availability[]>(`/api/tutors/${tutorID}/availability`, {
+    const { data: response, error} = await apiFetch<{availability: Availability[]}>(`/api/tutors/${tutorID}/availability`, {
         method: "PUT",
         headers: {
             Authorization: `Bearer ${tokenData?.token}`
@@ -145,7 +132,7 @@ export const updateTutorAvailability = async (inputData: UpdateTutorAvailability
     if (error) {
       return { error };
     }
-    return { data: response }
+    return { data: response?.availability }
   } catch (error) {
     return { error: { 
       status: (error as any)?.status || 500,
