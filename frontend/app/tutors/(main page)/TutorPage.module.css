@@ -17,19 +17,14 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  /* background: white;
-  border: 1px solid #9ca3af; */
   cursor: pointer;
 }
 
 .range-slider::-webkit-slider-thumb {
-  /* appearance: none; */
   pointer-events: auto;
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  /* background: white;
-  border: 1px solid #9ca3af; */
 }
 
 input::-webkit-slider-thumb {

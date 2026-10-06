@@ -192,10 +192,6 @@ export const getAvailabilityWeekDates = (selectedDate: string) => {
     .split("-")
     .map(Number);
 
-  console.log('Selected Date:', selectedDate)
-
-  console.log('Year, Month, Day:', year, month, day)
-
   const date = new Date(year, month - 1, day);
   const startOfWeek = new Date(date);
 
