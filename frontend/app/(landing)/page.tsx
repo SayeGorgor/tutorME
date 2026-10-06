@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import styles from "./landing.module.css";
 
-// import { subjects } from "@/constants/subjects";
+import type { Location, Subject } from "@/lib/types";
 import { getSubjects } from "@/lib/api/actions/client-actions";
-import type { Location } from "@/lib/types";
-import type { Subject } from "@/lib/types";
+import SearchIcon from "@/public/icons/search_icon.svg";
 // import { searchLocations } from "@/lib/api/actions/client-actions";
 
 type SubjectCategory = {
@@ -132,7 +132,7 @@ export default function Home() {
   };
 
   return (
-    <main id="body" className="flex-1 px-10">
+    <main id="body" className={`${styles.page} flex-1 px-4 sm:px-6 lg:px-10`}>
 
       <div id="top-card" className="flex flex-col bg-blue-100 h-[25rem] rounded-md p-6 my-2">
         <div id="top-card-main-content" className="flex justify-between h-full">
@@ -147,7 +147,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div id="top-card-main-content-right">
+          <div id="top-card-main-content-right" className="hidden sm:block">
             <div id="a-plus-badge" className="flex flex-col bg-indigo-500 h-4/5 rounded-lg items-center p-2">
               <div className="rounded-sm p-6 mt-8 mb-4 bg-indigo-300 text-2xl">
                 A+
@@ -158,7 +158,7 @@ export default function Home() {
           </div>
         </div>
 
-        <form id="search-tutors-section" className="flex rounded-md w-3/4">
+        <form id="search-tutors-section" className="flex rounded-md">
           <label className="relative flex flex-col flex-2 bg-white rounded-l-md">
             <span className="ml-3 mt-1 text-gray-600 text-[.8rem]">SUBJECT</span>
             <input 
@@ -173,7 +173,7 @@ export default function Home() {
             <ul
               id="subjects-box"
               ref={subjectsBoxRef}
-              className={`absolute -top-90 flex flex-wrap w-150 z-10 bg-white border border-gray-400 rounded-md mt-1 overflow-y-auto ${showSubjectsBox ? 'block' : 'hidden'}`}
+              className={`absolute top-full bottom-auto left-0 mt-1 lg:top-auto lg:bottom-full lg:mb-1 flex max-h-[40dvh] lg:max-h-72 flex-wrap w-full lg:w-150 max-w-[calc(100vw-4rem)] z-10 bg-white border border-gray-400 rounded-md overflow-y-auto ${showSubjectsBox ? 'block' : 'hidden'}`}
             >
               {subjectCategories.map((category) => (
                 <li key={category.name} className="p-2">
@@ -187,6 +187,7 @@ export default function Home() {
                       onClick={(e) => {
                         e.preventDefault();
                         setSubject(subject.name);
+                        setShowSubjectsBox(false);
                       }}
                     >
                       {subject.name}
@@ -210,13 +211,14 @@ export default function Home() {
                 value={areaSearch}
                 onChange={(e) => setAreaSearch(e.target.value)}
               />
-              <Image 
+              {/* <Image 
                 src="/icons/search_icon.svg" 
                 alt="Search Icon" 
                 width={30} 
                 height={30} 
                 className="mb-2 mr-5 -translate-x-1/2" 
-              />
+              /> */}
+              <SearchIcon className="absolute right-[-25] mb-2 mr-5 -translate-x-1/2 h-8.5 w-8.5 sm:h-9 sm:w-9" />
             </div>
           </label>
 

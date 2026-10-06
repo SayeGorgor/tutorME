@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import { authPageClass, authFormClass } from "@/components/auth-layout";
 
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -64,9 +65,9 @@ export default function LoginPage() {
         };
 
     return(
-        <main className="relative flex flex-1 flex-col items-center justify-center gap-6 bg-[url('/images/login_page_background.jpg')] bg-cover bg-[center_60%]">
+        <main className={authPageClass}>
             <div id="tint" className="absolute inset-0 bg-[rgba(2,0,112,0.2)] z-10"></div>
-            <form onSubmit={handleLogin} className="flex w-2/5 flex-col gap-4 bg-white p-6 rounded-md z-20">
+            <form onSubmit={handleLogin} className={authFormClass}>
                 <h1 className="text-2xl font-bold">Log In</h1>
 
                 {loading ? 
@@ -90,7 +91,7 @@ export default function LoginPage() {
                     <span className="text-gray-600">Password</span>
                     <div className="relative">
                         <input type={showPassword ? "text" : "password"} className="border border-gray-300 rounded-md p-2 w-full" value={password} onChange={(e) => setPassword(e.target.value)} />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-1 top-1/2 flex w-11 -translate-y-1/2 items-center justify-center">
                             <Image
                                 src={showPassword ? "/icons/hide_password_icon.svg" : "/icons/show_password_icon.svg"}
                                 alt={showPassword ? "Hide password" : "Show password"}

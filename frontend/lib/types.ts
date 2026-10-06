@@ -91,6 +91,24 @@ export type UpdateTutorProfileSchema = {
   }
 };
 
+export type CustomTimeRange = {
+    type: "custom";
+    date: string;
+    startTime: number;
+    endTime: number;
+    timezone: string;
+};
+
+export type WeeklyTimeRange = {
+    type: "weekly";
+    dayOfTheWeek: number;
+    startTime: number;
+    endTime: number;
+    timezone: string;
+};
+
+export type AvailabilityTimeRange = WeeklyTimeRange | CustomTimeRange;
+
 export type UpdateTutorAvailabilitySchema = {
   tutorID: number;
   availabilityData: {

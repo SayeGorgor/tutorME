@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import { authPageClass, authFormClass } from "@/components/auth-layout";
 
 import Image from "next/image";
 
@@ -60,9 +61,9 @@ export default function SignupPage() {
     };
 
     return(
-        <main className="relative flex flex-1 flex-col items-center justify-center gap-6 bg-[url('/images/login_page_background.jpg')] bg-cover bg-[center_60%]">
+        <main className={authPageClass}>
             <div id="tint" className="absolute inset-0 bg-[rgba(2,0,112,0.2)] z-10"></div>
-            <form className="flex w-2/5 flex-col gap-4 bg-white p-6 rounded-md z-20" onSubmit={handleSignUp}>
+            <form className={authFormClass} onSubmit={handleSignUp}>
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Sign Up</h1>
                     {/* <label className="flex items-center gap-2">
@@ -87,7 +88,7 @@ export default function SignupPage() {
                     systemMessage && <p className={`self-center text-lg ${hasError ? "text-red-500" : "text-green-500"}`}>{systemMessage}</p>
                 }
 
-                <div className="flex gap-4">
+                <div className="flex gap-4 flex-col xl:flex-row">
                     <label className="flex flex-1 flex-col gap-1">
                         <span className="text-gray-600">First Name<span className="text-red-500">*</span></span>
                         <input type="text" className="border border-gray-300 rounded-md p-2" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
@@ -107,7 +108,7 @@ export default function SignupPage() {
                     <span className="text-gray-600">Password<span className="text-red-500">*</span></span>
                     <div className="relative">
                         <input type={showPassword ? "text" : "password"} className="border border-gray-300 rounded-md p-2 w-full" value={password} onChange={(e) => setPassword(e.target.value)} />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-1 top-1/2 flex w-11 -translate-y-1/2 items-center justify-center">
                             <Image
                                 src={showPassword ? "/icons/hide_password_icon.svg" : "/icons/show_password_icon.svg"}
                                 alt={showPassword ? "Hide password" : "Show password"}
@@ -123,7 +124,7 @@ export default function SignupPage() {
                     <span className="text-gray-600">Confirm Password<span className="text-red-500">*</span></span>
                     <div className="relative">
                         <input type={showPasswordConfirm ? "text" : "password"} className="border border-gray-300 rounded-md p-2 w-full" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-                        <button type="button" onClick={() => setShowPasswordConfirm(!showPasswordConfirm)} className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                        <button type="button" onClick={() => setShowPasswordConfirm(!showPasswordConfirm)} className="absolute right-1 top-1/2 flex w-11 -translate-y-1/2 items-center justify-center">
                             <Image
                                 src={showPasswordConfirm ? "/icons/hide_password_icon.svg" : "/icons/show_password_icon.svg"}
                                 alt={showPasswordConfirm ? "Hide password" : "Show password"}

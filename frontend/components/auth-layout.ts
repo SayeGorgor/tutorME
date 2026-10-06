@@ -1,0 +1,3 @@
+// Shared sizing for both authentication pages; keep the original desktop proportions.
+export const authPageClass = "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-6 px-4 py-8 sm:px-6 bg-[url('/images/login_page_background.jpg')] bg-cover bg-[center_60%]";
+export const authFormClass = "relative z-20 flex w-full min-w-0 max-w-xl flex-col gap-4 rounded-md bg-white p-5 text-black sm:p-6 xl:w-2/5 xl:max-w-none [&_label]:min-w-0 [&_input]:min-w-0 [&_input]:w-full [&_input]:text-base [&_input]:min-h-11 [&_input[type=password]]:pr-12 [&_input[type=text]]:pr-12 [&_button]:min-h-11 [&_p]:break-words [&_p]:text-center";

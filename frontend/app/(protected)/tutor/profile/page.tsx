@@ -8,11 +8,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useCurrentUser } from "@/lib/context/UserContext";
-import { TutorProfile, UpdateTutorAvailabilitySchema } from "@/lib/types";
+import { TutorProfile, UpdateTutorAvailabilitySchema, AvailabilityTimeRange } from "@/lib/types";
 import { 
+    formatToDateString,
+    getAvailabilityWeekDates,
+    getAvailabilityCalendarCellSize,
     getTutorByUserId, 
     updateTutorProfile, 
-    updateTutorAvailability 
+    updateTutorAvailability
 } from "@/lib/api/actions/client-actions";
 
 import RatingStar from "@/components/RatingStar";
@@ -20,25 +23,7 @@ import ChoiceArrowsIcon from "@/public/icons/choice_arrows_icon.svg";
 import CalendarIcon from "@/public/icons/calendar_icon.svg";
 import EditIcon from "@/public/icons/edit_icon.svg";
 import LoadingAnimationIcon from "@/public/icons/loading_animation_icon.svg";
-import { AVAILABILITY_TIMES } from "@/constants/constants";
-
-type CustomTimeRange = {
-    type: "custom";
-    date: string;
-    startTime: number;
-    endTime: number;
-    timezone: string;
-};
-
-type WeeklyTimeRange = {
-    type: "weekly";
-    dayOfTheWeek: number;
-    startTime: number;
-    endTime: number;
-    timezone: string;
-};
-
-type AvailabilityTimeRange = WeeklyTimeRange | CustomTimeRange;
+import { AVAILABILITY_TIMES, DAYS } from "@/constants/constants";
 
 type toggleSquaresWeeklyInput = {
     type: "weekly";
@@ -59,7 +44,7 @@ export default function ProfilePage() {
     const router = useRouter();
 
     const times = AVAILABILITY_TIMES;
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const days = DAYS;
 
     const dateInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,15 +61,15 @@ export default function ProfilePage() {
 
     const [isLoadingAvailabilityUpdate, setIsLoadingAvailabilityUpdate] = useState(false);
     const [availabilityUpdateMessage, setAvailabilityUpdateMessage] = useState("");
-    const [showCalendar, setShowCalendar] = useState(false);
 
     const [availabilityTimeRanges, setAvailabilityTimeRanges] = useState<AvailabilityTimeRange[]>([]);
     const [originalAvailabilityTimeRanges, setOriginalAvailabilityTimeRanges] = useState<AvailabilityTimeRange[]>([]);
     const [availabilityType, setAvailabilityType] = useState<"weekly" | "custom">("weekly");
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString());
     const [showAvailabilityTypeDropdown, setShowAvailabilityTypeDropdown] = useState(false);
-    const [availabilityWeekDates, setAvailabilityWeekDates] = useState<Date[]>([]);
     const [currentTimePage, setCurrentTimePage] = useState(0);
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString());
+
+    const weekDates = getAvailabilityWeekDates(selectedDate);
     const timePages = Array.from(
         {length: Math.ceil(times.length / 6)},
         (_, i) => times.slice(
@@ -143,14 +128,6 @@ export default function ProfilePage() {
         };
         fetchTutorProfile();
     }, [user]);
-
-    const formatToDateString = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-
-        return `${year}-${month}-${day}`;
-    };
 
     const saveIntroChange = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -450,36 +427,6 @@ export default function ProfilePage() {
             return prev;
         });
     }
-
-    const getCellSize = (isActive: boolean, hasLeftNeighbor: boolean, hasRightNeighbor: boolean) => {
-
-        if(!isActive) return "rounded-2xl border border-black"
-        
-        return `
-            bg-blue-500
-            ${hasLeftNeighbor ? "-ml-2 pl-2 rounded-l-none border-l-0" : "rounded-l-2xl"}
-            ${hasRightNeighbor ? "-mr-2 pr-2 rounded-r-none border-r-0" : "rounded-r-2xl"}
-            border border-black
-        `
-    }
-
-    const getWeekDates = (selectedDate: string) => {
-        const [year, month, day] = selectedDate.split("-").map(Number);
-
-        const date = new Date(year, month - 1, day);
-        const startOfWeek = new Date(date);
-
-        startOfWeek.setDate(date.getDate() - date.getDay());
-
-        return Array.from({ length: 7 }, (_, i) => {
-            const currentDate = new Date(startOfWeek);
-            currentDate.setDate(startOfWeek.getDate() + i);
-
-            return currentDate;
-        });
-    };
-
-    const weekDates = getWeekDates(selectedDate);
 
     const handleAvailabilityUpdate = async(updateData: UpdateTutorAvailabilitySchema) => {
         setIsLoadingAvailabilityUpdate(true);
@@ -785,13 +732,6 @@ export default function ProfilePage() {
                                                     className="sr-only"
                                                 />
                                             </div>
-                                            {showCalendar && (
-                                                <input
-                                                    type="date"
-                                                    value={selectedDate}
-                                                    onChange={(e) => setSelectedDate(e.target.value)}
-                                                />
-                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -869,7 +809,7 @@ export default function ProfilePage() {
                                                 return (
                                                     <div
                                                         key={calendarIndex}
-                                                        className={`h-10 cursor-pointer ${getCellSize(isActive, hasLeftNeighbor, hasRightNeighbor)}`}
+                                                        className={`h-10 cursor-pointer ${getAvailabilityCalendarCellSize(isActive, hasLeftNeighbor, hasRightNeighbor)}`}
                                                         onClick={() => toggleSquare({
                                                             timeIndex,
                                                             dayIndex,
@@ -924,7 +864,7 @@ export default function ProfilePage() {
                                                 return (
                                                     <div
                                                         key={calendarIndex}
-                                                        className={`h-10 cursor-pointer ${getCellSize(isActive, hasLeftNeighbor, hasRightNeighbor)}`}
+                                                        className={`h-10 cursor-pointer ${getAvailabilityCalendarCellSize(isActive, hasLeftNeighbor, hasRightNeighbor)}`}
                                                         onClick={() => toggleSquare({
                                                             timeIndex,
                                                             date: formatToDateString(date),

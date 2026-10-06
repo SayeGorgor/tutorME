@@ -165,3 +165,46 @@ export const getSubjects = async (): Promise<APIResponse<Subject[]>> => {
   }
   return { data: response };
 }
+
+/* NON ASYNC HELPERS */
+export const formatToDateString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+};
+
+export const getAvailabilityCalendarCellSize = (isActive: boolean, hasLeftNeighbor: boolean, hasRightNeighbor: boolean) => {
+  if(!isActive) return "rounded-2xl border border-black"
+  
+  return `
+    bg-blue-500
+    ${hasLeftNeighbor ? "-ml-2 pl-2 rounded-l-none border-l-0" : "rounded-l-2xl"}
+    ${hasRightNeighbor ? "-mr-2 pr-2 rounded-r-none border-r-0" : "rounded-r-2xl"}
+    border border-black
+  `
+}
+
+export const getAvailabilityWeekDates = (selectedDate: string) => {
+  const [year, month, day] = selectedDate
+    .split("T")[0]
+    .split("-")
+    .map(Number);
+
+  console.log('Selected Date:', selectedDate)
+
+  console.log('Year, Month, Day:', year, month, day)
+
+  const date = new Date(year, month - 1, day);
+  const startOfWeek = new Date(date);
+
+  startOfWeek.setDate(date.getDate() - date.getDay());
+
+  return Array.from({ length: 7 }, (_, i) => {
+    const currentDate = new Date(startOfWeek);
+    currentDate.setDate(startOfWeek.getDate() + i);
+
+    return currentDate;
+  });
+};
