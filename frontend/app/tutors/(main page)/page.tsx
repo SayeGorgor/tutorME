@@ -7,6 +7,8 @@ import type { Location, User, TutorProfile } from "@/lib/types";
 import TutorCard from "@/components/TutorCard";
 import { getTutors } from "@/lib/api/actions/client-actions";
 
+import styles from "./TutorPage.module.css";
+
 export default function TutorsPage() {
     const searchParams = useSearchParams();
     const subject = searchParams.get("subject");
@@ -19,6 +21,14 @@ export default function TutorsPage() {
 
     const [maxDistance, setMaxDistance] = useState(25);
     const [tutors, setTutors] = useState<TutorProfile[]>([]);
+
+    const [maxPrice, setMaxPrice] = useState(200);
+    const [minPrice, setMinPrice] = useState(10);
+
+    const min = 10;
+    const max = 200;
+    const minPercent = ((minPrice - min) / (max - min)) * 100;
+    const maxPercent = ((maxPrice - min) / (max - min)) * 100;
 
     const [hasError, setHasError] = useState(false);
     const [sysMessage, setSysMessage] = useState("");
@@ -65,14 +75,46 @@ export default function TutorsPage() {
                         </label>
                     </fieldset>
 
-                    <fieldset>
+                    <fieldset className="flex flex-col gap-2">
                         <legend className="font-bold">Price</legend>
-                        <label className="flex items-center gap-2">
-                            <input type="radio" name="session-type" value="online" /> Online
-                        </label>
-                        <label className="flex items-center gap-2">
-                            <input type="radio" name="session-type" value="in-person" /> In-Person
-                        </label>
+                        <div className="group relative">
+                            {/* Background track */}
+                            <div className="absolute top-2 -translate-y-1/2 h-2 w-full bg-gray-100 border border-gray-400/75 group-hover:border-gray-400 rounded-full" />
+
+                            {/* Selected range */}
+                            <div
+                            className="absolute top-2 -translate-y-1/2 h-2 bg-blue-500 group-hover:bg-blue-700 rounded-full"
+                            style={{
+                                left: `${minPercent}%`,
+                                width: `${maxPercent - minPercent}%`,
+                            }}
+                            />
+
+                            <input
+                            type="range"
+                            min={min}
+                            max={max}
+                            step={5}
+                            value={minPrice}
+                            onChange={(e) =>
+                                setMinPrice(Math.min(Number(e.target.value), maxPrice - 5))
+                            }
+                            className={`${styles["range-slider"]} absolute w-full appearance-none bg-transparent`}
+                            />
+
+                            <input
+                            type="range"
+                            min={min}
+                            max={max}
+                            step={5}
+                            value={maxPrice}
+                            onChange={(e) =>
+                                setMaxPrice(Math.max(Number(e.target.value), minPrice + 5))
+                            }
+                            className={`${styles["range-slider"]} absolute w-full appearance-none bg-transparent`}
+                            />
+                        </div>
+                        <span className="mt-3">${minPrice} - ${maxPrice}</span>
                     </fieldset>
 
                     <label className="flex flex-col">
