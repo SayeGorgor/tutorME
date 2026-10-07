@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { LANGUAGES } from "@/constants/languages";
-import type { Location, User, TutorProfile } from "@/lib/types";
+import type { Location, TutorProfile } from "@/lib/types";
 import TutorCard from "@/components/TutorCard";
+import ResponsivePanel from "@/components/ResponsivePanel";
 import { getTutors } from "@/lib/api/actions/client-actions";
 
 import styles from "./TutorPage.module.css";
@@ -14,8 +15,6 @@ export default function TutorsPage() {
     const subject = searchParams.get("subject");
     const city = searchParams.get("city");
     const state = searchParams.get("state");
-    const latitude = searchParams.get("lat");
-    const longitude = searchParams.get("long");
 
     const testLocation: Location = { city: "Stone Mountain", state: "GA", zip: "30087", country: "US", latitude: 33.8049, longitude: -84.1556 };
 
@@ -57,14 +56,10 @@ export default function TutorsPage() {
     return (
         <div 
             id="page"
-            className="flex h-full gap-6 p-6 bg-blue-100"
+            className="grid min-w-0 flex-1 grid-cols-1 items-start gap-4 bg-blue-100 p-4 text-black sm:gap-6 sm:p-6 lg:grid-cols-[minmax(13rem,1fr)_minmax(0,4fr)] xl:grid-cols-[minmax(13rem,1fr)_minmax(0,4fr)_minmax(12rem,2fr)]"
         >
-            <div 
-                id="filter-column"
-                className="flex-1 p-4 bg-white rounded-xl h-fit"
-            >
-                <h2 className="text-lg font-bold mb-2">Filters</h2>
-                <form id="filter-form" className="flex flex-col gap-4">
+            <ResponsivePanel title="Filters">
+                <form id="filter-form" className="flex flex-col gap-4 [&_fieldset]:min-w-0 [&_select]:min-h-11 [&_select]:w-full [&_select]:min-w-0 [&_select]:max-w-full [&_label]:min-h-11 lg:[&_label]:min-h-0 [&_button]:min-h-11" onSubmit={(event) => event.preventDefault()}>
                     <fieldset>
                         <legend className="font-bold">Session Type</legend>
                         <label className="flex items-center gap-2">
@@ -92,6 +87,7 @@ export default function TutorsPage() {
 
                             <input
                             type="range"
+                            aria-label="Minimum price"
                             min={min}
                             max={max}
                             step={5}
@@ -104,6 +100,7 @@ export default function TutorsPage() {
 
                             <input
                             type="range"
+                            aria-label="Maximum price"
                             min={min}
                             max={max}
                             step={5}
@@ -136,11 +133,11 @@ export default function TutorsPage() {
                         Apply Filters
                     </button>
                 </form>
-            </div>
+            </ResponsivePanel>
             
             <div 
                 id="tutors-column"
-                className="flex flex-col gap-4 flex-4"
+                className="flex min-w-0 flex-col gap-4 [overflow-wrap:anywhere]"
             >
                 <div className="flex flex-col">
                     <h2 className="text-2xl font-bold">
@@ -152,20 +149,21 @@ export default function TutorsPage() {
                         </p>
                     )}
                 </div>
-                <ul id="tutor-list" className="flex flex-col min-h-0 gap-4 overflow-y-auto scrollbar-none">
+                <ul id="tutor-list" className="flex min-w-0 flex-col gap-4">
                     {isLoading ? (
-                        <p>Loading tutors...</p>
+                        <li role="status">Loading tutors...</li>
                     ) : (
-                        tutors.map((tutor) => (
-                            <TutorCard
-                                key={tutor.userId}
-                                id={tutor.userId}
-                                firstName={tutor.user.firstName}
-                                lastName={tutor.user.lastName}
-                                price={tutor.price}
-                                subject={subject}
-                                location={testLocation}
-                            />
+                        hasError ? <li role="alert" className="break-words text-red-700">{sysMessage}</li> : tutors.length === 0 ? <li>No tutors match your search.</li> : tutors.map((tutor) => (
+                            <li key={tutor.userId} className="min-w-0">
+                                <TutorCard
+                                    id={tutor.userId}
+                                    firstName={tutor.user.firstName}
+                                    lastName={tutor.user.lastName}
+                                    price={tutor.price}
+                                    subject={subject}
+                                    location={testLocation}
+                                />
+                            </li>
                         ))
                     )}
                 </ul>
@@ -173,7 +171,7 @@ export default function TutorsPage() {
 
             <div 
                 id="map"
-                className="flex-2 p-4 bg-white font-bold text-center rounded-xl"
+                className="min-h-48 min-w-0 rounded-xl bg-white p-4 text-center font-bold lg:col-span-2 xl:col-span-1 xl:self-stretch"
             >
                 <h2>Map View</h2>
             </div>

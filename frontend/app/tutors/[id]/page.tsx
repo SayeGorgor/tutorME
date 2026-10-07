@@ -4,13 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import React from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/dist/client/link";
+import Link from "next/link";
 
 import RatingStar from "@/components/RatingStar";
 import ChoiceArrowsIcon from "@/public/icons/choice_arrows_icon.svg";
 import CalendarIcon from "@/public/icons/calendar_icon.svg";
 
-import type { TutorProfile, AvailabilityTimeRange } from "@/lib/types";
+import type { TutorProfile } from "@/lib/types";
 import { AVAILABILITY_TIMES, DAYS } from "@/constants/constants";
 import { 
     getTutorByUserId, 
@@ -35,12 +35,9 @@ export default function TutorProfilePage({
     const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(null);
     const [hasError, setHasError] = useState(false);
     const [sysMessage, setSysMessage] = useState("");
-    const [id, setId] = useState<number | null>(null);
 
-    const [availabilityTimeRanges, setAvailabilityTimeRanges] = useState<AvailabilityTimeRange[]>([]);
     const [availabilityType, setAvailabilityType] = useState<"weekly" | "custom">("weekly");
     const [showAvailabilityTypeDropdown, setShowAvailabilityTypeDropdown] = useState(false);
-    const [availabilityWeekDates, setAvailabilityWeekDates] = useState<Date[]>([]);
     const [currentTimePage, setCurrentTimePage] = useState(0);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString());
     
@@ -76,24 +73,24 @@ export default function TutorProfilePage({
     }, [params]);
 
     return (
-        <div className="flex flex-col p-8 gap-2">
+        <div className="flex min-w-0 flex-col gap-2 p-4 sm:p-6 lg:p-8 [overflow-wrap:anywhere]">
             <button 
-                className="self-start cursor-pointer text-blue-700 hover:underline"
+                className="min-h-11 lg:min-h-0 self-start cursor-pointer text-blue-700 hover:underline"
                 onClick={() => router.back()}
             >
                 {"< Back to Search"}
             </button>
             {isLoading ? (
-                <p>Loading...</p>
+                <p role="status">Loading...</p>
             ) : tutorProfile ? (
                 <>
                     <div 
                         id="tutor-profile-card" 
-                        className="flex justify-between p-6 bg-blue-100 rounded-lg"
+                        className="flex min-w-0 flex-col justify-between gap-6 rounded-lg bg-blue-100 p-4 text-black sm:p-6 xl:flex-row"
                     >
                         <div 
                             id="tutor-profile-card-left"
-                            className="flex gap-6"
+                            className="flex min-w-0 flex-col gap-4 sm:flex-row sm:gap-6"
                         >
                             <Image 
                                 id="pfp" 
@@ -101,11 +98,11 @@ export default function TutorProfilePage({
                                 alt={`${tutorProfile.user.firstName} ${tutorProfile.user.lastName}'s Profile Picture`} 
                                 width={210} 
                                 height={210}
-                                className="bg-gray-500 rounded-lg"
+                                className="h-32 w-32 shrink-0 self-start rounded-lg bg-gray-500 object-cover sm:h-[210px] sm:w-[210px]"
                             />
                             <div
                                 id="tutor-info"
-                                className="flex flex-col gap-2"
+                                className="flex min-w-0 flex-col gap-2"
                             >
                                 <div className="flex flex-col gap-1">
                                     <p className="font-bold text-3xl">{tutorProfile.user.firstName} {tutorProfile.user.lastName}</p>
@@ -120,7 +117,7 @@ export default function TutorProfilePage({
 
                                 <p className="text-lg font-bold">SAT Prep & Algebra Tutor</p>
 
-                                <div className="flex gap-2 items-center">
+                                <div className="flex flex-wrap gap-2 items-center">
                                     <div className="flex gap-1 items-center">
                                         <RatingStar filled={true} height={3} width={3} />
                                         <p className="text-sm">4.9 (124 reviews)</p>
@@ -135,35 +132,35 @@ export default function TutorProfilePage({
                                     <p className="text-sm">Online Available</p>
                                 </div>
                                 
-                                <p className="w-150">{tutorProfile.intro}</p>
+                                <p className="w-full max-w-[37.5rem]">{tutorProfile.intro}</p>
                             </div>
                         </div>
-                        <div id="tutor-profile-card-right" className="flex flex-col">
-                            <p className="text-lg self-end text-gray-600"><span className="font-bold text-2xl text-black">${tutorProfile.price}</span> / hr</p>
+                        <div id="tutor-profile-card-right" className="flex shrink-0 flex-col gap-1 xl:max-w-56">
+                            <p className="text-lg text-gray-600 xl:self-end"><span className="font-bold text-2xl text-black">${tutorProfile.price}</span> / hr</p>
 
-                            <button className="mt-4 bg-blue-700 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300 cursor-pointer">
+                            <button className="min-h-11 mt-4 bg-blue-700 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300 cursor-pointer">
                                 Book a Session
                             </button>
 
                             <Link 
                                 href={`/`}
-                                className="self-center mt-2 text-blue-700 text-md hover:underline"
+                                className="flex min-h-11 items-center self-center mt-2 text-blue-700 text-md hover:underline"
                             >
                                 Message {tutorProfile.user.firstName}
                             </Link>
                         </div>
                     </div>
 
-                    <div id="additional-info-section" className="flex mt-4">
-                        <div id="additional-info-section-left" className="flex flex-5 flex-col gap-5">
+                    <div id="additional-info-section" className="flex min-w-0 flex-col gap-6 mt-4 xl:flex-row xl:gap-10">
+                        <div id="additional-info-section-left" className="flex min-w-0 flex-5 flex-col gap-5">
                             <div className="flex flex-col gap-1">
                                 <p className="text-xl font-bold">About {tutorProfile.user.firstName}</p>
-                                <p className="text-sm">{tutorProfile.bio}</p>
+                                <p className="text-md">{tutorProfile.bio}</p>
                             </div>
 
                             <div className="flex flex-col gap-1">
                                 <p className="text-xl font-bold">Subjects</p>
-                                <ul className="flex gap-2">
+                                <ul className="flex flex-wrap gap-2">
                                     <li>
                                         <div 
                                             className="bg-blue-200 w-fit py-1 px-3 rounded-2xl text-sm text-blue-700 font-bold"
@@ -192,15 +189,14 @@ export default function TutorProfilePage({
                                 <p className="text-xl font-bold">Reviews</p>
                             </div>
                         </div>
-                        <div id="additional-info-section-right" className="flex flex-3 flex-col justify-center gap-1 ml-10">
-                            <h3 className="text-xl font-bold">Availability - <span className="text-lg">{currentTimePage > 3 ? 'PM' : 'AM'}</span></h3>
+                        <div id="additional-info-section-right" className="flex min-w-0 flex-3 flex-col justify-center gap-1 xl:min-w-[28rem]">
+                            <h3 className="text-xl font-bold ml-3.5">Availability - <span className="text-lg">{currentTimePage > 3 ? 'PM' : 'AM'}</span></h3>
 
                             
-                            <div className="grid grid-cols-8 gap-2">
-                                <div className="flex justify-center items-center gap-6 col-span-8">
+                                <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-6">
                                     <div className="relative flex items-center">
                                         <button 
-                                            className="flex items-center cursor-pointer"
+                                            className="flex min-h-11 lg:min-h-0 items-center cursor-pointer"
                                             onClick={() => setShowAvailabilityTypeDropdown(!showAvailabilityTypeDropdown)}
                                         >
                                             <h4 className="text-lg font-semibold">
@@ -211,7 +207,7 @@ export default function TutorProfilePage({
 
                                         <div
                                             id="availability-type-dropdown"
-                                            className={`absolute top-[-2.5] left-[-2.5] mt-2 w-40 bg-white border border-gray-700 rounded-lg shadow-lg z-10 ${showAvailabilityTypeDropdown ? 'block' : 'hidden'}`}
+                                            className={`absolute top-full left-0 mt-2 w-40 bg-white border border-gray-700 rounded-lg shadow-lg z-10 ${showAvailabilityTypeDropdown ? 'block' : 'hidden'}`}
                                         >
                                             <div
                                                 className="px-4 py-2 cursor-pointer rounded-t-lg hover:bg-gray-200"
@@ -235,14 +231,14 @@ export default function TutorProfilePage({
                                     </div>
 
                                     {availabilityType === "custom" && (
-                                        <div className="flex gap-2">
+                                        <div className="flex flex-wrap gap-2">
                                             <h3 className="text-lg items-center font-semibold">
                                                 {weekDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {weekDates[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, {weekDates[6].getFullYear()}
                                             </h3>
                                             <div>
                                                 <button 
                                                     onClick={() => dateInputRef.current?.showPicker()}
-                                                    className="cursor-pointer"
+                                                    className="flex min-h-11 min-w-11 items-center justify-center cursor-pointer"
                                                     aria-label="Select date"
                                                 >
                                                     <CalendarIcon className="w-6 h-6" />
@@ -259,15 +255,20 @@ export default function TutorProfilePage({
                                     )}
                                 </div>
 
+
+                            <p className="text-sm text-gray-600 sm:hidden">Scroll horizontally to view all availability times.</p>
+                            <div className="min-w-0 overflow-x-auto pb-2" role="region" aria-label="Tutor availability calendar" tabIndex={0}>
+                            <div className="grid min-w-[28rem] grid-cols-8 gap-2">
                                 <button 
+                                    aria-label="Previous availability times"
                                     onClick={() => setCurrentTimePage(currentTimePage > 0 ? currentTimePage - 1 : 7)}
-                                    className="flex items-center justify-center font-semibold h-6 text-center cursor-pointer"
+                                    className="flex min-h-11 lg:min-h-6 items-center justify-center font-semibold text-center cursor-pointer"
                                 >
                                     &lt;
                                 </button>
-                                <div className="overflow-hidden h-6 col-span-6">
+                                <div className="flex min-h-11 lg:min-h-6 items-center overflow-hidden col-span-6">
                                     <div
-                                        className="flex transition-transform duration-300 ease-in-out"
+                                        className="flex w-full min-w-0 shrink-0 transition-transform duration-300 ease-in-out"
                                         style={{
                                             transform: `translateX(-${currentTimePage * 100}%)`,
                                         }}
@@ -287,8 +288,9 @@ export default function TutorProfilePage({
                                     </div>
                                 </div> 
                                 <button 
+                                    aria-label="Next availability times"
                                     onClick={() => setCurrentTimePage(currentTimePage < 7 ? currentTimePage + 1 : 0)}
-                                    className="flex items-center justify-center font-semibold h-6 text-center cursor-pointer"
+                                    className="flex min-h-11 lg:min-h-6 items-center justify-center font-semibold text-center cursor-pointer"
                                 >
                                     &gt;
                                 </button>
@@ -382,7 +384,7 @@ export default function TutorProfilePage({
                                                 return (
                                                     <div
                                                         key={calendarIndex}
-                                                        className={`h-10 cursor-pointer ${getAvailabilityCalendarCellSize(isActive, hasLeftNeighbor, hasRightNeighbor)}`}
+                                                        className={`h-10 ${getAvailabilityCalendarCellSize(isActive, hasLeftNeighbor, hasRightNeighbor)}`}
                                                     ></div>
                                                 );
                                             })}
@@ -391,11 +393,12 @@ export default function TutorProfilePage({
                                     ))
                                 )}
                             </div>
+                            </div>
                         </div>
                     </div>
                 </>
             ) : (
-                <p>Tutor profile not found.</p>
+                <p role={hasError ? "alert" : "status"}>{hasError ? sysMessage : "Tutor profile not found."}</p>
             )}
         </div>
     )

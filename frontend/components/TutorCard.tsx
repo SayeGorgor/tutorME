@@ -48,17 +48,17 @@ export default function TutorCard({
     // }, []);
 
     return (
-        <div className="flex flex-1 gap-5 h-48 bg-white p-4 rounded-lg shadow-md">
+        <div className="flex min-w-0 flex-col gap-4 bg-white p-4 rounded-lg shadow-md sm:flex-row sm:gap-5 xl:min-h-48 [overflow-wrap:anywhere]">
             <Image 
                 id="pfp" 
                 src="/icons/default_pfp_icon.svg" 
                 alt={`${firstName} ${lastName}'s Profile Picture`} 
                 width={150} 
                 height={100}
-                className="bg-gray-500 rounded-lg"
+                className="h-28 w-28 shrink-0 self-start bg-gray-500 rounded-lg object-cover sm:h-40 sm:w-[150px]"
             />
-            <div id="info" className="flex flex-1 justify-between">
-                <div id='info-left' className="flex flex-col justify-between">
+            <div id="info" className="flex min-w-0 flex-1 flex-col justify-between gap-4 sm:flex-row">
+                <div id='info-left' className="flex min-w-0 flex-1 flex-col justify-between gap-1">
                     <h2 className='text-xl font-bold'>{firstName} {lastName}</h2>
                     <p className='text-gray-600'>Calculus • SAT Prep</p>
                     <div className="flex items-center gap-1">
@@ -66,7 +66,7 @@ export default function TutorCard({
                         <span className="text-md text-black">4.5</span>
                         <span className="text-md text-black">(124)</span>
                     </div>
-                    {pfp && <img src={pfp} alt={`${firstName} ${lastName}`} />}
+                    {pfp && <img src={pfp} alt={`${firstName} ${lastName}`} className="h-auto max-w-full" />}
                     {languages && languages.length > 0 && (
                         <p>Languages: {languages.map(lang => lang.name).join(', ')}</p>
                     )}
@@ -82,9 +82,9 @@ export default function TutorCard({
                         Online + Local
                     </div>
                 </div>
-                <div id='info-right' className="flex flex-col justify-between items-end">
+                <div id='info-right' className="flex shrink-0 flex-row flex-wrap items-center justify-between gap-3 sm:flex-col sm:items-end">
                     <p className='text-black font-bold'>${price} / hr</p>
-                    <Link href={`/tutors/${id}`} className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 cursor-pointer text-center">
+                    <Link href={`/tutors/${id}`} className="flex min-h-11 items-center justify-center bg-blue-500 text-white p-2 rounded hover:bg-blue-600 cursor-pointer text-center">
                         View Profile
                     </Link>
                 </div>

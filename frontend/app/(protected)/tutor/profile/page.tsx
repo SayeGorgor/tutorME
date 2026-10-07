@@ -429,6 +429,8 @@ export default function ProfilePage() {
     }
 
     const handleAvailabilityUpdate = async(updateData: UpdateTutorAvailabilitySchema) => {
+        if(isLoadingAvailabilityUpdate) return;
+        
         setIsLoadingAvailabilityUpdate(true);
         const { data, error } = await updateTutorAvailability(updateData);
         setIsLoadingAvailabilityUpdate(false);
