@@ -53,12 +53,19 @@ function TutorDiscovery({ query }: { query: string }) {
         if (mode === "in-person" && !area) { setFormError("Choose a city or ZIP code for in-person lessons."); return; }
         if (Number(minPrice) > Number(maxPrice)) { setFormError("Minimum price cannot exceed maximum price."); return; }
         const params = new URLSearchParams({ mode, radius, minPrice, maxPrice });
-        if (subject) params.set("subject", subject);
+        const subjectName = subject.trim().replace(/\s+/g, " ");
+        if (subjectName) params.set("subject", subjectName);
         if (area && mode !== "online") params.set("areaId", area.id);
         setFormError(""); router.push(`/tutors?${params}`);
       }}>
         <label className="flex flex-col gap-2 text-sm font-medium">Lesson format<select value={mode} onChange={e => setMode(e.target.value)} className="border bg-white p-3"><option value="all">All tutors</option><option value="online">Online tutoring</option><option value="in-person">In-person tutoring</option></select></label>
-        <label className="flex flex-col gap-2 text-sm font-medium">Subject<select value={subject} onChange={e => setSubject(e.target.value)} className="border bg-white p-3"><option value="">All subjects</option>{subject && !subjects.some(s => s.name === subject) && <option value={subject}>{subject}</option>}{subjects.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}</select></label>
+        <div className="flex flex-col gap-2">
+          <label className="flex flex-col gap-2 text-sm font-medium">Subject
+            <input type="text" list="tutor-search-subjects" value={subject} onChange={e => setSubject(e.target.value)} maxLength={255} autoComplete="off" placeholder="All subjects" aria-describedby="subject-search-help" className="min-w-0 border bg-white p-3" />
+          </label>
+          <datalist id="tutor-search-subjects">{subjects.map(s => <option key={s.id} value={s.name} />)}</datalist>
+          <p id="subject-search-help" className="text-xs text-slate-500">Choose a suggestion or type any subject. Leave blank to search all subjects.</p>
+        </div>
         {mode !== "online" && <>{areaReady ? <ServiceAreaPicker value={area} onChange={setArea} /> : <p role="status">Loading selected area...</p>}<label className="flex flex-col gap-2 text-sm font-medium">Search radius: {radius} miles<input type="range" min={0} max={100} step={1} value={radius} onChange={e => setRadius(e.target.value)} /></label><p className="text-xs text-slate-500">In-person matches must fit both your radius and the tutor travel limit. Online tutors remain included in All tutors.</p></>}
         <fieldset><legend className="mb-2 text-sm font-medium">Hourly price ($)</legend><div className="grid grid-cols-2 gap-2"><label className="flex min-w-0 flex-col gap-1 text-xs">Minimum<input required type="number" min={0} max={10000} value={minPrice} onChange={e => setMinPrice(e.target.value)} className="w-full border bg-white p-3 text-sm" /></label><label className="flex min-w-0 flex-col gap-1 text-xs">Maximum<input required type="number" min={0} max={10000} value={maxPrice} onChange={e => setMaxPrice(e.target.value)} className="w-full border bg-white p-3 text-sm" /></label></div></fieldset>
         <button disabled={!areaReady} className="rounded-xl bg-blue-700 p-3 text-sm font-semibold text-white hover:bg-blue-800">Apply filters</button>
