@@ -8,7 +8,6 @@ import {
   User, 
   CreateUserSchema, 
   Availability,
-  APIError,
   APIResponse,
   UpdateTutorAvailabilitySchema
 } from "@/lib/types";
@@ -44,9 +43,14 @@ import {
 /* USER ACTIONS */
 export const createUser = async (user: CreateUserSchema): Promise<APIResponse<User>> => {
   try {
+    const { data: tokenData } = await authClient.token();
+    if (!tokenData?.token) return { error: { status: 401, message: "Sign in to finish creating your account." } };
     const { data: response, error: resError } = await apiFetch<User>("/api/users", {
+      headers: { Authorization: `Bearer ${tokenData.token}` },
       method: "POST",
-      body: { 
+      body: {
+        adultConfirmed: user.adultConfirmed, termsAccepted: user.termsAccepted,
+        termsVersion: user.termsVersion, accountPurpose: user.accountPurpose,
         auth_id: user.authID, 
         first_name: user.firstName,
         last_name: user.lastName,
@@ -62,7 +66,7 @@ export const createUser = async (user: CreateUserSchema): Promise<APIResponse<Us
   } catch (error) {
     console.error("Error signing up:", error);
     return { error: { 
-      status: (error as any)?.status || 500,
+      status: 500,
       message: (error as Error).message || "Error signing up" 
     } };
   }
@@ -84,7 +88,7 @@ export const getCurrentUser = async (): Promise<APIResponse<User>> => {
   } catch (error) {
     console.error("Error getting current user:", error);
     return { error: { 
-      status: (error as any)?.status || 500,
+      status: 500,
       message: (error as Error).message || "Error getting current user" 
     } };
   }
@@ -109,7 +113,7 @@ export const updateTutorProfile = async (inputData: UpdateTutorProfileSchema): P
      return { data: response }
   } catch (error) {
     return { error: { 
-      status: (error as any)?.status || 500,
+      status: 500,
       message: (error as Error).message || "Error updating tutor profile" 
     } }
   }
@@ -135,7 +139,7 @@ export const updateTutorAvailability = async (inputData: UpdateTutorAvailability
     return { data: response?.availability }
   } catch (error) {
     return { error: { 
-      status: (error as any)?.status || 500,
+      status: 500,
       message: (error as Error).message || "Error updating tutor profile" 
     } }
   }

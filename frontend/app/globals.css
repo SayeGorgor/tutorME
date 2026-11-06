@@ -1,27 +1,74 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+:root { --background: #f7f9fd; --foreground: #192b48; color-scheme: light; }
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
+  --color-blue-50: #f1f6fd;
+  --color-blue-100: #eaf2fd;
+  --color-blue-200: #dceafd;
+  --color-blue-500: #3265d4;
+  --color-blue-600: #2855bb;
+  --color-blue-700: #234aa2;
+  --color-blue-800: #18386d;
+  --color-indigo-300: #c4d9fa;
+  --color-indigo-500: #3265d4;
+  --color-indigo-600: #2855bb;
+  --color-indigo-700: #234aa2;
 }
+body { background: var(--background); color: var(--foreground); font-family: var(--font-inter), Arial, sans-serif; }
+h1, h2, h3 { letter-spacing: -.035em; }
+p { line-height: 1.65; }
+button, a, input, select, textarea { transition: background-color .18s, border-color .18s, box-shadow .18s, color .18s; }
+button:not(:disabled), select { cursor: pointer; }
+button:disabled { cursor: wait; opacity: .6; }
+:focus-visible { outline: 3px solid #5a8bea; outline-offset: 4px; }
+input:not([type=radio]):not([type=checkbox]):not([type=range]), select, textarea { border-color: #dce4f0; border-radius: .65rem; }
+input:not([type=radio]):not([type=checkbox]):not([type=range]):focus, select:focus, textarea:focus { border-color: #3265d4; }
+input[type=range], input[type=radio], input[type=checkbox] { accent-color: #3265d4; }
+::selection { background: #c4d9fa; color: #18386d; }
+.surface { border: 1px solid #e0e7f2; box-shadow: 0 4px 20px #192b4805; }
+.account-nav { background: #142b50; }
+.account-nav a, .account-nav button { font-size: .875rem; font-weight: 500; padding: .8rem 1rem; }
+.account-nav #logo { letter-spacing: -.06em; font-weight: 750; }
+#tutor-profile-card { background: white; border: 1px solid #e0e7f2; border-radius: 1.25rem; box-shadow: 0 6px 24px #192b4805; padding: clamp(1.25rem, 3vw, 2.5rem); }
+#additional-info-section-left, #additional-info-section-right { background: white; padding: 1.5rem; border: 1px solid #e0e7f2; border-radius: 1.25rem; }
+#tutor-profile-card #pfp { background: #dceafd; }
+#map { border: 1px dashed #cbd8ed; background: #edf2fa; color: #536887; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; } }
 
+.map-preview { color: #192b48; max-width: 18rem; font-size: .875rem; }
+.map-preview a { display: block; color: #234aa2; padding: .65rem 0; text-decoration: underline; }
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  .location-ui { color: #e4ecfa; background-color: #17253c; }
+  .location-ui .surface, .location-ui .bg-white, .location-ui.surface { background-color: #17253c; border-color: #34445f; color: #e4ecfa; }
+  .location-ui button:hover { border-color: #789bd4; }
+  .location-ui .hover\:bg-blue-50:hover { background-color: #233d63; }
+  .location-ui .text-black { color: #e4ecfa; }
+  .location-ui .text-slate-500, .location-ui .text-slate-600 { color: #b3c3dc; }
+  .location-ui .text-blue-700, .location-ui .text-blue-800 { color: #a9c8ff; }
+  .location-ui .bg-blue-50, .location-ui .bg-blue-100 { background-color: #233d63; }
+  .location-ui .bg-blue-700, .location-ui .bg-blue-800 { background-color: #3265d4; color: white; }
+  .location-ui .text-red-700 { color: #ffb4b4; }
+  .location-ui input, .location-ui select, .location-ui textarea { color-scheme: dark; border-color: #536887; }
 }
 
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Keep the native widget/prediction branding intact: no filters, clipping,
+   shadow-DOM overrides, or custom replacement prediction list. */
+.google-location-widget { overflow: visible; min-width: 0; }
+.google-location-widget gmp-place-autocomplete { width: 100%; color-scheme: light; }
+@media (prefers-color-scheme: dark) {
+  .google-location-widget gmp-place-autocomplete { color-scheme: dark; }
 }
+
+.legal-document { color: #233756; line-height: 1.8; }
+.legal-document a { color: #234aa2; text-decoration: underline; text-underline-offset: 3px; }
+@media (prefers-color-scheme: dark) {
+ .legal-document { color: #dce8fa; background: #17253c; }
+ .legal-document a, .legal-document .text-blue-700 { color: #abcaff; }
+ .site-footer { color: #b3c3dc; background: #14243c; border-color: #34445f; }
+}
+
+.demo-badge { display: inline-block; border: 1px solid #d8c99b; border-radius: 999px; background: #fff8e5; color: #684f0b; padding: .25rem .65rem; font-size: .75rem; font-weight: 600; }

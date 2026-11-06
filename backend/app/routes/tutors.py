@@ -1,17 +1,22 @@
 
 import logging
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
+from typing import Annotated
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.dependencies import get_db
 from app.models.tutor_availability import TutorAvailability
-from app.models.user import User
+from app.models.user import User, UserRole
+from app.models.service_area import ServiceArea
+from app.models.subject import Subject
+from app.schemas.location import LocationPreferences, TutorSearch
+from app.services.tutor_search import search_tutors
 from app.models.tutor_profile import TutorProfile
 from app.actions.actions import haversine_distance, get_current_user
 
 from app.schemas.user import UserResponse
-from app.schemas.tutor import TutorProfileResponse, TutorProfileUpdate
+from app.schemas.tutor import TutorProfileResponse, TutorProfileUpdate, TutorSearchResponse
 from app.schemas.tutor_availability import TutorAvailabilityCreate, TutorAvailabilityResponse
 
 logger = logging.getLogger(__name__)
@@ -21,12 +26,43 @@ router = APIRouter(
     tags=["Tutors"]
 )
 
-@router.get("/", response_model=list[TutorProfileResponse])
-def get_tutors(db: Session = Depends(get_db)):
-    # Placeholder for tutor retrieval logic
-    tutors = db.scalars(select(TutorProfile)).all()
+def require_owner(user: User, user_id: int):
+    if user.role != UserRole.TUTOR or user.id != user_id:
+        raise HTTPException(403, "You can only edit your own tutor profile")
 
-    return tutors
+
+@router.get("/", response_model=list[TutorProfileResponse])
+def get_tutors(params: Annotated[TutorSearch, Query()], db: Session = Depends(get_db)):
+    return search_tutors(db, params)["items"]
+
+
+@router.get("/search", response_model=TutorSearchResponse)
+def search(params: Annotated[TutorSearch, Query()], db: Session = Depends(get_db)):
+    return search_tutors(db, params)
+
+
+@router.put("/user/{user_id}/location", response_model=TutorProfileResponse)
+def save_location(user_id: int, preferences: LocationPreferences,
+                  db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    require_owner(current_user, user_id)
+    tutor = db.scalar(select(TutorProfile).where(TutorProfile.user_id == user_id))
+    if not tutor:
+        raise HTTPException(404, "Tutor not found")
+    if preferences.service_area_id and not db.get(ServiceArea, preferences.service_area_id):
+        raise HTTPException(422, "Unknown service area")
+    data = preferences.model_dump(exclude={"public_area_consent"})
+    if not preferences.in_person_enabled:
+        data.update(service_area_id=None, place_id=None, meeting_preferences=None)
+    for field, value in data.items():
+        setattr(tutor, field, value)
+    try:
+        db.commit()
+        db.refresh(tutor)
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Unable to save tutoring preferences")
+    return tutor
+
 
 @router.get("/user/{user_id}", response_model=TutorProfileResponse)
 def get_tutor_by_user_id(user_id: int, db: Session = Depends(get_db)):
@@ -42,8 +78,7 @@ def update_tutor_by_user_id(
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    require_owner(current_user, user_id)
 
     tutor = db.scalars(
         select(TutorProfile)
@@ -55,6 +90,15 @@ def update_tutor_by_user_id(
 
     update_data = user_data.model_dump(exclude_unset=True)
 
+    subject_ids = update_data.pop("subject_ids", None)
+    if subject_ids is not None:
+        subjects = db.scalars(select(Subject).where(Subject.id.in_(set(subject_ids)))).all()
+        if len(subjects) != len(set(subject_ids)):
+            raise HTTPException(422, "Unknown subject")
+        tutor.subjects = list(subjects)
+    # Availability is handled by its dedicated endpoint, not raw ORM assignment.
+    if "availability" in update_data:
+        raise HTTPException(422, "Use the availability endpoint")
     for field, value in update_data.items():
         setattr(tutor, field, value)
 
@@ -70,9 +114,10 @@ def update_tutor_availability(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    logger.info("Updating availability for user: %s with data: %s", current_user.id, availability_data)
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    tutor = db.scalar(select(TutorProfile).where(TutorProfile.id == tutor_id).with_for_update())
+    if not tutor:
+        raise HTTPException(404, "Tutor not found")
+    require_owner(current_user, tutor.user_id)
 
     try:
         db.query(TutorAvailability).filter(
@@ -101,6 +146,7 @@ def update_tutor_availability(
 
         return {"availability": availability}
     except Exception as e:
+        db.rollback()
         logger.exception("Error updating availability for tutor_id: %s", tutor_id)
         raise HTTPException(status_code=500, detail="Failed to update availability")
 

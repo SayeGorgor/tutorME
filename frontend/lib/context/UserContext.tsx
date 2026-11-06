@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { authClient } from '@/lib/auth/client';
+import { usePathname, useRouter } from "next/navigation";
 import { getCurrentUser } from '@/lib/api/actions/client-actions';
 import { User } from '../types';
 
@@ -13,17 +13,19 @@ type UserContextType = {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
-    const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
+    const router = useRouter();
+    const pathname = usePathname();
 
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         const fetchUser = async () => {
-            const { data: currentUserData } = await getCurrentUser();
+            const { data: currentUserData, error } = await getCurrentUser();
+            if (error?.code === "REGISTRATION_INCOMPLETE" && pathname !== "/complete-registration") router.replace("/complete-registration");
             try {
                 setUser(currentUserData ?? null);
-            } catch (error) {
+            } catch {
                 setUser(null);
             } finally {
                 setLoading(false);
@@ -31,7 +33,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         };
 
         fetchUser();
-    }, []);
+    }, [pathname, router]);
 
     return (
         <UserContext.Provider value={{ user, loading }}>

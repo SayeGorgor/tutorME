@@ -1,4 +1,5 @@
-from sqlalchemy import BigInteger, String, Enum as SQLEnum
+from datetime import datetime
+from sqlalchemy import BigInteger, String, DateTime, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
 
@@ -72,6 +73,11 @@ class User(Base):
         default="now()",
         server_default="now()"
     )
+
+    account_purpose: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    adult_attested_at: Mapped["datetime | None"] = mapped_column(DateTime(timezone=True), nullable=True)
+    terms_version: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    terms_accepted_at: Mapped["datetime | None"] = mapped_column(DateTime(timezone=True), nullable=True)
 
     reviews_written: Mapped[list["Review"]] = relationship(
         foreign_keys="Review.author_id",

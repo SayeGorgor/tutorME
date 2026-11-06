@@ -1,7 +1,1 @@
-export default function EarningsPage() {
-    return (
-        <div className="flex flex-col gap-6 px-10 py-6">
-            <h1>Earnings</h1>
-        </div>
-    );
-}
+export default function Page(){return <main className="flex flex-col gap-4 p-6"><h1 className="text-3xl font-semibold">Rates and payments</h1><p>TutorME does not currently process payments or collect payment card information.</p><p>Profile prices are tutor-listed hourly rates. Any payment independently arranged between a tutor and an adult account holder takes place outside TutorME and is not facilitated by the platform. No earnings or payment history is tracked here.</p></main>;}

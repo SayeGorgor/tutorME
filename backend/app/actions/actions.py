@@ -29,10 +29,7 @@ security = HTTPBearer()
 
 jwks_client = PyJWKClient(NEON_AUTH_JWKS_URL)
 
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security), 
-    db: Session = Depends(get_db)
-):
+def get_identity(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
 
     try:
@@ -54,7 +51,7 @@ def get_current_user(
             detail="Token has expired"
         )
     
-    except jwt.InvalidTokenError:
+    except (jwt.InvalidTokenError, jwt.PyJWKClientError):
         logger.exception("Invalid token")
         raise HTTPException(
             status_code=401,
@@ -63,21 +60,24 @@ def get_current_user(
     
     auth_id = payload.get("sub")
 
-    if not auth_id:
+    if not isinstance(auth_id, str) or not auth_id.strip():
         logger.exception("Invalid Auth ID")
         raise HTTPException(
             status_code=401,
             detail="Invalid Auth ID"
         )
 
-    user = db.query(User).filter(User.auth_id == auth_id).first()
+    return payload
+
+
+def get_current_user(identity: dict = Depends(get_identity), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.auth_id == identity["sub"]).first()
 
     if not user:
-        logger.exception("User not found")
-        raise HTTPException(
-            status_code=403,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=404, detail={
+            "code": "REGISTRATION_INCOMPLETE",
+            "message": "Your sign-in account exists. Finish account setup to create your TutorME profile.",
+        })
 
     return user
 

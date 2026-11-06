@@ -1,94 +1,17 @@
-'use client';
+import Image from "next/image";
+import Link from "next/link";
+import type { TutorSearchItem } from "@/lib/types";
+import TutorLocationBadges from "./TutorLocationBadges";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-// import { getTutorDistance } from '../lib/api/actions/client-actions';
-
-import Image from 'next/image';
-import Link from 'next/link';
-
-import RatingStar from './RatingStar';
-import { Language, Location } from '@/lib/types';
-
-type TutorCardProps = {
-    id: number;
-    firstName: string;
-    lastName: string;
-    description?: string;
-    subject: string | null;
-    price: number;
-    pfp?: string | null;
-    location?: Location | null;
-    languages?: Language[];
-}
-
-export default function TutorCard({ 
-    id, 
-    firstName, 
-    lastName, 
-    description = "This is an example description.", 
-    subject="Calculus", 
-    price,
-    pfp=null, 
-    location, 
-    languages=[] 
-}: TutorCardProps) {
-    const router = useRouter();
-    
-    const [distance, setDistance] = useState<number | null>(2.4136);
-    
-    // useEffect(() => {
-    //     const fetchDistance = async () => {
-    //         if (location) {
-    //             const distance = await getTutorDistance(0, 0, location.latitude, location.longitude);
-    //             setDistance(distance);
-    //         }
-    //     };
-    //     fetchDistance();
-    // }, []);
-
-    return (
-        <div className="flex min-w-0 flex-col gap-4 bg-white p-4 rounded-lg shadow-md sm:flex-row sm:gap-5 xl:min-h-48 [overflow-wrap:anywhere]">
-            <Image 
-                id="pfp" 
-                src="/icons/default_pfp_icon.svg" 
-                alt={`${firstName} ${lastName}'s Profile Picture`} 
-                width={150} 
-                height={100}
-                className="h-28 w-28 shrink-0 self-start bg-gray-500 rounded-lg object-cover sm:h-40 sm:w-[150px]"
-            />
-            <div id="info" className="flex min-w-0 flex-1 flex-col justify-between gap-4 sm:flex-row">
-                <div id='info-left' className="flex min-w-0 flex-1 flex-col justify-between gap-1">
-                    <h2 className='text-xl font-bold'>{firstName} {lastName}</h2>
-                    <p className='text-gray-600'>Calculus • SAT Prep</p>
-                    <div className="flex items-center gap-1">
-                        <RatingStar filled={true} />
-                        <span className="text-md text-black">4.5</span>
-                        <span className="text-md text-black">(124)</span>
-                    </div>
-                    {pfp && <img src={pfp} alt={`${firstName} ${lastName}`} className="h-auto max-w-full" />}
-                    {languages && languages.length > 0 && (
-                        <p>Languages: {languages.map(lang => lang.name).join(', ')}</p>
-                    )}
-                    {distance !== null && (
-                        <p className="text-sm text-gray-600">
-                            {distance.toFixed(2)} mi • {location?.city}, {location?.state}
-                        </p>
-                    )}
-                    <div 
-                        id="session-type-badge"
-                        className="inline-block w-fit px-2 py-1 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full"
-                    >
-                        Online + Local
-                    </div>
-                </div>
-                <div id='info-right' className="flex shrink-0 flex-row flex-wrap items-center justify-between gap-3 sm:flex-col sm:items-end">
-                    <p className='text-black font-bold'>${price} / hr</p>
-                    <Link href={`/tutors/${id}`} className="flex min-h-11 items-center justify-center bg-blue-500 text-white p-2 rounded hover:bg-blue-600 cursor-pointer text-center">
-                        View Profile
-                    </Link>
-                </div>
-            </div>
-        </div>
-    );
+export default function TutorCard({ tutor }: { tutor: TutorSearchItem }) {
+  return <article className="surface flex min-w-0 flex-col gap-5 rounded-2xl bg-white p-5 hover:shadow-lg sm:flex-row sm:p-6">
+    <Image src="/icons/default_pfp_icon.svg" alt="" width={112} height={112} className="h-28 w-28 shrink-0 self-start rounded-2xl bg-blue-100 object-cover" />
+    <div className="flex min-w-0 flex-1 flex-col gap-3">{tutor.isDemo && <span className="demo-badge self-start">Demo Profile</span>}<h2 className="text-xl font-semibold">{tutor.user.firstName} {tutor.user.lastName}</h2>
+      <TutorLocationBadges tutor={tutor} />
+      <p className="text-sm text-slate-600">{tutor.subjects.length ? tutor.subjects.map(s => s.name).join(" / ") : "Subjects not listed yet"}</p>
+      {tutor.intro && <p className="line-clamp-2 text-sm text-slate-600">{tutor.intro}</p>}
+      {tutor.inPersonEnabled && tutor.serviceArea && tutor.distanceMiles !== null && <p className="text-sm text-slate-600">~{tutor.distanceMiles} miles straight-line{tutor.inPersonMatch ? " / Within travel range" : ""}</p>}
+    </div>
+    <div className="flex shrink-0 items-center justify-between gap-3 sm:flex-col sm:items-end"><p className="text-xl font-semibold">${tutor.price}<span className="text-sm font-normal text-slate-500"> / hr</span></p><Link href={`/tutors/${tutor.userId}`} className="rounded-xl bg-blue-700 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-blue-800">View profile</Link></div>
+  </article>;
 }

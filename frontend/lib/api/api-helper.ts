@@ -22,21 +22,27 @@ export async function apiFetch<T>(
 
     if (!response.ok) {
       let message = `Something went wrong`;
+      let code: string | undefined;
 
       try {
         const errorData = await response.json();
-        if(errorData.detail) { message = errorData.detail;}
-      } catch (error) {
+        if (typeof errorData.detail === "string") { message = errorData.detail; }
+        else if (errorData.detail && typeof errorData.detail === "object" && !Array.isArray(errorData.detail)) {
+          if (typeof errorData.detail.message === "string") message = errorData.detail.message;
+          if (typeof errorData.detail.code === "string") code = errorData.detail.code;
+        }
+        else if (Array.isArray(errorData.detail)) { message = errorData.detail.map((item: { msg?: string }) => item.msg || "Invalid input").join("; "); }
+      } catch {
         // Ignore JSON parsing errors and use the default message
       }
 
-      return { error: { status: response.status, message } };
+      return { error: { status: response.status, message, code } };
     }
 
     const data = await response.json() as T;
 
     return { data };
-  } catch (error) {
-    return { error: { status: 500, message: 'Internal Server Error' } };
+  } catch {
+    return { error: { status: 500, message: 'The server could not be reached. Check your connection and retry.' } };
   }
 }

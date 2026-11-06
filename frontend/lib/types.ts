@@ -56,6 +56,10 @@ export type User = {
   lastName: string;
   role: UserRole;
   timezone: string;
+  accountPurpose?: "self" | "guardian" | "tutor" | null;
+  adultAttestedAt?: string | null;
+  termsVersion?: string | null;
+  termsAcceptedAt?: string | null;
   phoneNumber?: string;
   subjects?: Subject[];
   reviewsWritten?: Review[];
@@ -63,6 +67,10 @@ export type User = {
 }
 
 export type CreateUserSchema = {
+  adultConfirmed: boolean;
+  termsAccepted: boolean;
+  termsVersion: string;
+  accountPurpose: "self" | "guardian" | "tutor";
   authID: string;
   email: string;
   firstName: string;
@@ -78,6 +86,13 @@ export type TutorProfile = {
   bio: string;
   price: number;
   user: User;
+  isDemo: boolean;
+  onlineEnabled: boolean;
+  inPersonEnabled: boolean;
+  serviceArea: ServiceArea | null;
+  travelRadiusMiles: number;
+  meetingPreferences: string | null;
+  subjects: Subject[];
   availability: Availability[];
 };
 
@@ -87,6 +102,7 @@ export type UpdateTutorProfileSchema = {
     intro?: string;
     bio?: string;
     price?: number;
+    subjectIds?: number[];
     availability?: Availability[];
   }
 };
@@ -124,6 +140,7 @@ export type UpdateTutorAvailabilitySchema = {
 };
 
 export type APIError = {
+  code?: string;
   status?: number;
   message: string;
 };
@@ -131,4 +148,31 @@ export type APIError = {
 export type APIResponse<T> = {
   data?: T;
   error?: APIError;
+};
+
+export type ServiceArea = {
+  id: string; name: string; displayName?: string; displayLabel?: string; region: string; country: string; postalCode: string | null;
+  latitude: number; longitude: number; source: string;
+};
+export type LocationPreferences = {
+  onlineEnabled: boolean; inPersonEnabled: boolean; serviceAreaId: string | null;
+  placeId?: string | null; travelRadiusMiles: number; meetingPreferences: string | null; publicAreaConsent: boolean;
+};
+export type TutorSearchItem = TutorProfile & { distanceMiles: number | null; inPersonMatch: boolean };
+export type TutorSearchResponse = { items: TutorSearchItem[]; total: number; limit: number; offset: number };
+
+export type Booking = {
+  id: string; studentId: number; tutorId: number; mode: "online" | "in-person";
+  startsAt: string; endsAt: string; status: "pending" | "confirmed" | "declined" | "cancelled" | "completed";
+  meetingDetails: string | null; studentName: string; tutorName: string; createdAt: string;
+};
+
+export type RegistrationStatus =
+  | { status: "complete"; role: UserRole }
+  | { status: "needs_completion"; email: string; name: string }
+  | { status: "EMAIL_VERIFICATION_REQUIRED" | "PROVIDER_EMAIL_UNAVAILABLE" | "PROVIDER_NAME_UNAVAILABLE"; message: string };
+export type CompleteRegistrationInput = {
+  firstName: string; lastName: string; role: "student" | "tutor"; timezone: string;
+  adultConfirmed: boolean; termsAccepted: boolean; termsVersion: string;
+  accountPurpose: "self" | "guardian" | "tutor";
 };

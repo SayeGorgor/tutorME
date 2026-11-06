@@ -1,53 +1,8 @@
-'use client';
-
-import { useEffect } from 'react';
+"use client";
 import { useCurrentUser } from "@/lib/context/UserContext";
-import UpcomingSessionsCard from "@/components/UpcomingSessionsCard";
-
-export default function DashboardPage() {
-    const { user, loading } = useCurrentUser();
-
-    if (loading) {
-        return <p>Loading...</p>;
-    }
-
-    return (
-        <div className="flex flex-col gap-6 px-10 py-6">
-            <div>
-                <h1 className="text-2xl font-bold">Good afternoon, {user?.firstName}!</h1>
-                <p className="text-gray-600">Here's what's coming up in your learning schedule.</p>
-            </div>
-
-            <div className="flex flex-col gap-2 mt-4">
-                <h2 className="text-xl font-semibold">Upcoming Sessions</h2>
-                <UpcomingSessionsCard />
-            </div>
-            
-            <div className="flex flex-col gap-2">
-                <h2 className="text-xl font-semibold">Your Learning</h2>
-                
-                <div className="flex gap-4">
-                    <div className="bg-white w-50 px-4 py-6 rounded-lg shadow-sm">
-                        <h3 className="text-blue-500 text-3xl font-semibold">0</h3>
-                        <p className="text-gray-600">Sessions Completed</p>
-                    </div>
-
-                    <div className="bg-white w-50 px-4 py-6 rounded-lg shadow-sm">
-                        <h3 className="text-blue-500 text-3xl font-semibold">0h</h3>
-                        <p className="text-gray-600">Learning Time</p>
-                    </div>
-
-                    <div className="bg-white w-50 px-4 py-6 rounded-lg shadow-sm">
-                        <h3 className="text-blue-500 text-3xl font-semibold">0</h3>
-                        <p className="text-gray-600">Tutors Worked With</p>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <h2 className="text-xl font-semibold">Recommended for you</h2>
-                <p className="text-gray-600">You have no upcoming sessions scheduled.</p>
-            </div>
-        </div>
-    )
+import BookingList from "@/components/BookingList";
+export default function Dashboard() {
+  const {user,loading}=useCurrentUser();
+  if(loading)return <p className="p-6">Loading dashboard...</p>;
+  return <div className="flex w-full min-w-0 flex-col gap-8 p-5 sm:p-8 lg:p-10"><header><h1 className="text-3xl font-semibold">Welcome, {user?.firstName}</h1><p className="mt-2 text-slate-600">Manage your requests and genuine tutoring appointments.</p></header><BookingList compact /></div>;
 }

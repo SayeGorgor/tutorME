@@ -1,12 +1,13 @@
 'use client';
+import TutorLocationBadges from "@/components/TutorLocationBadges";
 
 import { useState, useEffect, useRef } from "react";
 import React from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 
-import RatingStar from "@/components/RatingStar";
+import BookingRequest from "@/components/BookingRequest";
+import { areaLabel } from "@/components/ServiceAreaPicker";
 import ChoiceArrowsIcon from "@/public/icons/choice_arrows_icon.svg";
 import CalendarIcon from "@/public/icons/calendar_icon.svg";
 
@@ -84,6 +85,7 @@ export default function TutorProfilePage({
                 <p role="status">Loading...</p>
             ) : tutorProfile ? (
                 <>
+                    {tutorProfile.isDemo && <p className="demo-badge self-start">Demo Profile - fictional tutor, not available for genuine appointments</p>}
                     <div 
                         id="tutor-profile-card" 
                         className="flex min-w-0 flex-col justify-between gap-6 rounded-lg bg-blue-100 p-4 text-black sm:p-6 xl:flex-row"
@@ -106,51 +108,23 @@ export default function TutorProfilePage({
                             >
                                 <div className="flex flex-col gap-1">
                                     <p className="font-bold text-3xl">{tutorProfile.user.firstName} {tutorProfile.user.lastName}</p>
+                                    <TutorLocationBadges tutor={tutorProfile} />
 
-                                    <div 
-                                        id='verification-badge'
-                                        className="bg-blue-200 w-fit py-1 px-3 rounded-2xl text-sm text-blue-700 font-bold"
-                                    >
-                                        Verified Tutor
-                                    </div>
                                 </div>
-
-                                <p className="text-lg font-bold">SAT Prep & Algebra Tutor</p>
-
-                                <div className="flex flex-wrap gap-2 items-center">
-                                    <div className="flex gap-1 items-center">
-                                        <RatingStar filled={true} height={3} width={3} />
-                                        <p className="text-sm">4.9 (124 reviews)</p>
-                                    </div>
-                                    
-                                    <p className="mt-1">•</p>
-
-                                    <p className="text-sm">2.4 mi away</p>
-
-                                    <p className="mt-1">•</p>
-
-                                    <p className="text-sm">Online Available</p>
-                                </div>
-                                
-                                <p className="w-full max-w-[37.5rem]">{tutorProfile.intro}</p>
+                                <p className="text-lg font-bold">{tutorProfile.subjects.map(subject => subject.name).join(" / ") || "Subjects not listed yet"}</p>
+                                <p className="text-sm">{[tutorProfile.onlineEnabled && "Online lessons", tutorProfile.inPersonEnabled && "In-person lessons"].filter(Boolean).join(" / ")}</p>
+                                {tutorProfile.inPersonEnabled && tutorProfile.serviceArea && <div className="location-ui rounded-xl bg-blue-50 p-3 text-sm"><p>{areaLabel(tutorProfile.serviceArea)} / Travels up to {tutorProfile.travelRadiusMiles} miles</p><p className="text-slate-600">Approximate public service area, not a meeting address.</p>{tutorProfile.meetingPreferences && <p>{tutorProfile.meetingPreferences}</p>}</div>}
+                                <p className="w-full max-w-[37.5rem]">{tutorProfile.intro?.trim() || "This tutor has not added an introduction yet."}</p>
                             </div>
                         </div>
                         <div id="tutor-profile-card-right" className="flex shrink-0 flex-col gap-1 xl:max-w-56">
                             <p className="text-lg text-gray-600 xl:self-end"><span className="font-bold text-2xl text-black">${tutorProfile.price}</span> / hr</p>
 
-                            <button className="min-h-11 mt-4 bg-blue-700 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300 cursor-pointer">
-                                Book a Session
-                            </button>
-
-                            <Link 
-                                href={`/`}
-                                className="flex min-h-11 items-center self-center mt-2 text-blue-700 text-md hover:underline"
-                            >
-                                Message {tutorProfile.user.firstName}
-                            </Link>
+                            <p className="mt-4 text-sm text-slate-600">Tutor-listed rate; TutorME does not collect payments. Appointment requests require tutor approval.</p>
                         </div>
                     </div>
 
+                    <BookingRequest tutor={tutorProfile} />
                     <div id="additional-info-section" className="flex min-w-0 flex-col gap-6 mt-4 xl:flex-row xl:gap-10">
                         <div id="additional-info-section-left" className="flex min-w-0 flex-5 flex-col gap-5">
                             <div className="flex flex-col gap-1">
@@ -160,29 +134,7 @@ export default function TutorProfilePage({
 
                             <div className="flex flex-col gap-1">
                                 <p className="text-xl font-bold">Subjects</p>
-                                <ul className="flex flex-wrap gap-2">
-                                    <li>
-                                        <div 
-                                            className="bg-blue-200 w-fit py-1 px-3 rounded-2xl text-sm text-blue-700 font-bold"
-                                        >
-                                            Algebra
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div 
-                                            className="bg-blue-200 w-fit py-1 px-3 rounded-2xl text-sm text-blue-700 font-bold"
-                                        >
-                                            Geometry
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div 
-                                            className="bg-blue-200 w-fit py-1 px-3 rounded-2xl text-sm text-blue-700 font-bold"
-                                        >
-                                            SAT Prep
-                                        </div>
-                                    </li>
-                                </ul>
+                                <ul className="flex flex-wrap gap-2">{tutorProfile.subjects.map(subject => <li key={subject.id} className="w-fit rounded-2xl bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">{subject.name}</li>)}                                </ul>
                             </div>
 
                             <div className="flex flex-col gap-1">

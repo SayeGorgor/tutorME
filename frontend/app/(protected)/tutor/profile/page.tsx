@@ -18,7 +18,9 @@ import {
     updateTutorAvailability
 } from "@/lib/api/actions/client-actions";
 
-import RatingStar from "@/components/RatingStar";
+import TutorLocationBadges from "@/components/TutorLocationBadges";
+import TutorRateEditor from "@/components/TutorRateEditor";
+import TutorLocationSettings from "@/components/TutorLocationSettings";
 import ChoiceArrowsIcon from "@/public/icons/choice_arrows_icon.svg";
 import CalendarIcon from "@/public/icons/calendar_icon.svg";
 import EditIcon from "@/public/icons/edit_icon.svg";
@@ -53,7 +55,6 @@ export default function ProfilePage() {
     const [introText, setIntroText] = useState("");
     const [isEditingAbout, setIsEditingAbout] = useState(false);
     const [aboutText, setAboutText] = useState("");
-    const [isEditingSubjects, setIsEditingSubjects] = useState(false);
 
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
@@ -463,6 +464,7 @@ export default function ProfilePage() {
                 </div>
             ) : tutorProfile ? (
                 <>
+                    <TutorLocationSettings tutor={tutorProfile} onSaved={setTutorProfile} />
                     <div 
                         id="tutor-profile-card" 
                         className="flex justify-between p-6 bg-blue-100 rounded-lg"
@@ -486,30 +488,27 @@ export default function ProfilePage() {
                                 <div className="flex flex-col gap-1">
                                     <p className="font-bold text-3xl">{tutorProfile.user.firstName} {tutorProfile.user.lastName}</p>
 
-                                    <div 
-                                        id='verification-badge'
-                                        className="bg-blue-200 w-fit py-1 px-3 rounded-2xl text-sm text-blue-700 font-bold"
-                                    >
-                                        Verified Tutor
-                                    </div>
+                                    <TutorLocationBadges tutor={tutorProfile} />
                                 </div>
 
-                                <p className="text-lg font-bold">SAT Prep & Algebra Tutor</p>
+                                <p className="text-lg font-bold">{tutorProfile.subjects.map(subject => subject.name).join(" / ") || "Subjects not listed yet"}</p>
 
                                 <div className="flex gap-2 items-center">
                                     <div className="flex gap-1 items-center">
-                                        <RatingStar filled={true} height={3} width={3} />
-                                        <p className="text-sm">4.9 (124 reviews)</p>
+                                        <p className="text-sm">Tutor-provided profile information</p>
                                     </div>
 
                                     <p className="mt-1">•</p>
 
-                                    <p className="text-sm">Online Available</p>
+                                    <p className="text-sm">{[tutorProfile.onlineEnabled && "Online lessons", tutorProfile.inPersonEnabled && "In-person lessons"].filter(Boolean).join(" ? ")}</p>
                                 </div>
                                 
                                 {isEditingIntro ? (
                                     <form className="flex gap-1" onSubmit={saveIntroChange}>
                                         <textarea
+                                            aria-label="Tutor introduction"
+                                            maxLength={255}
+                                            placeholder="Share what you teach, who you help, and your teaching style."
                                             value={introText}
                                             onChange={(e) => setIntroText(e.target.value)}
                                             className="w-150 h-15 p-2 border rounded-lg bg-white"
@@ -522,6 +521,7 @@ export default function ProfilePage() {
                                                 Save
                                             </button>
                                             <button 
+                                                type="button"
                                                 className="text-red-500 cursor-pointer hover:underline"
                                                 onClick={() => {
                                                     setIsEditingIntro(false);
@@ -534,7 +534,7 @@ export default function ProfilePage() {
                                     </form>
                                 ) : (
                                     <div className="w-fit relative">
-                                        <p className="max-w-150">{tutorProfile.intro}</p>
+                                        <p className={`max-w-150 ${!tutorProfile.intro?.trim() ? "italic text-slate-500" : ""}`}>{tutorProfile.intro?.trim() ? tutorProfile.intro : "Introduce yourself in one or two sentences: share what you teach, who you help, and your teaching style."}</p>
                                         <button 
                                             className="absolute top-[-14] right-[-24] rounded-full p-1 text-gray-600 hover:text-gray-800 cursor-pointer"
                                             onClick={() => {
@@ -551,30 +551,20 @@ export default function ProfilePage() {
                             </div>
                         </div>
                         <div id="tutor-profile-card-right" className="flex flex-col">
-                            <p className="text-lg self-end text-gray-600"><span className="font-bold text-2xl text-black">${tutorProfile.price}</span> / hr</p>
+                            <TutorRateEditor tutor={tutorProfile} onSaved={setTutorProfile} />
                         </div>
                     </div>
 
                     <div id="additional-info-section" className="flex gap-4mt-4">
                         <div id="additional-info-section-left" className="flex flex-5 flex-col gap-5">
                             <div className="flex flex-col gap-1">
-                                <div className="w-fit relative">
-                                    <p className="text-xl font-bold">About {tutorProfile.user.firstName}</p>
-                                    <button 
-                                        className="absolute top-[-14] right-[-24] p-1 text-gray-600 hover:text-gray-800 cursor-pointer"
-                                        onClick={() => {
-                                            setIsEditingAbout(!isEditingAbout)
-                                            setAboutText(tutorProfile.bio);
-                                        }}
-                                    >
-                                        <EditIcon 
-                                            className="w-4 h-4" 
-                                        />
-                                    </button>
-                                </div>
+                                <p className="text-xl font-bold">About {tutorProfile.user.firstName}</p>
                                 {isEditingAbout ? (
                                     <form onSubmit={saveAboutChange} className="flex flex-col gap-2">
-                                        <textarea 
+                                        <textarea
+                                            aria-label="About you and your tutoring experience"
+                                            maxLength={1000}
+                                            placeholder="Write a longer overview of yourself and your experience. Share your education, tutoring background, subject expertise, teaching approach, and how you help students reach their goals."
                                             value={aboutText}
                                             onChange={(e) => setAboutText(e.target.value)}
                                             className="border border-gray-500 rounded-lg text-sm p-2 h-55 bg-white"
@@ -586,7 +576,8 @@ export default function ProfilePage() {
                                             >
                                                 Save
                                             </button>
-                                            <button 
+                                            <button
+                                                type="button"
                                                 className="text-red-500 cursor-pointer hover:underline"
                                                 onClick={() => {
                                                     setIsEditingAbout(false);
@@ -598,45 +589,26 @@ export default function ProfilePage() {
                                         </div>
                                     </form>
                                 ) : (
-                                    <p className="w-full whitespace-pre-line text-sm">{tutorProfile?.bio}</p>
+                                    <div className="relative w-fit">
+                                        <p className={`max-w-150 whitespace-pre-line text-sm ${!tutorProfile.bio?.trim() ? "italic text-slate-500" : ""}`}>{tutorProfile.bio?.trim() ? tutorProfile.bio : "Write a longer overview of yourself and your experience. Share your education, tutoring background, subject expertise, teaching approach, and how you help students reach their goals."}</p>
+                                        <button type="button" aria-label="Edit about section" className="absolute top-[-14] right-[-24] rounded-full p-1 text-gray-600 hover:text-gray-800 cursor-pointer" onClick={() => {
+                                            setIsEditingAbout(true);
+                                            setAboutText(tutorProfile.bio);
+                                        }}>
+                                            <EditIcon className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 )}
                             </div>
 
-                            <div className="flex flex-col gap-1">
-                                <div className="w-fit relative">
+                            <div className="flex flex-col gap-2">
+                                <div className="flex items-center gap-3">
                                     <p className="text-xl font-bold">Subjects</p>
-                                    <button 
-                                        className="absolute top-[-14] right-[-24] p-1 text-gray-600 hover:text-gray-800 cursor-pointer"
-                                        onClick={() => setIsEditingIntro(!isEditingIntro)}
-                                    >
-                                        <EditIcon 
-                                            className="w-4 h-4" 
-                                        />
-                                    </button>
+                                    <a href="#subjects-you-teach" className="text-sm font-semibold text-blue-700 hover:underline">Edit subjects</a>
                                 </div>
-                                <ul className="flex gap-2">
-                                    <li>
-                                        <div 
-                                            className="bg-blue-200 w-fit py-1 px-3 rounded-2xl text-sm text-blue-700 font-bold"
-                                        >
-                                            Algebra
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div 
-                                            className="bg-blue-200 w-fit py-1 px-3 rounded-2xl text-sm text-blue-700 font-bold"
-                                        >
-                                            Geometry
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div 
-                                            className="bg-blue-200 w-fit py-1 px-3 rounded-2xl text-sm text-blue-700 font-bold"
-                                        >
-                                            SAT Prep
-                                        </div>
-                                    </li>
-                                </ul>
+                                {tutorProfile.subjects.length ? <ul className="flex flex-wrap gap-2">
+                                    {tutorProfile.subjects.map(subject => <li key={subject.id} className="w-fit rounded-2xl bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">{subject.name}</li>)}
+                                </ul> : <p className="text-sm text-slate-500">Add the subjects you teach using the form below.</p>}
                             </div>
 
                             <div className="flex flex-col gap-1">

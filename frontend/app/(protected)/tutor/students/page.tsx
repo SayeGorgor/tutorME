@@ -1,7 +1,2 @@
-export default function StudentsPage() {
-    return (
-        <div className="flex flex-col gap-6 px-10 py-6">
-            <h1>Students</h1>
-        </div>
-    );
-}
+import Link from "next/link";
+export default function StudentsPage(){return <main className="flex flex-col gap-4 p-6"><h1 className="text-3xl font-semibold">Students</h1><p>Adult participants appear in your appointment records. Minor profiles and bookings for minors are not enabled; do not collect child information here.</p><Link className="text-blue-700 underline" href="/tutor/sessions">Review appointment participants</Link></main>;}

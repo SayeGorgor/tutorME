@@ -50,61 +50,46 @@ def seed_subjects(db: SessionLocal):
             db.add(Subject(name=subject["name"], category=subject["category"]))
 
 def seed_tutor_profiles(db: SessionLocal):
-    tutors = [
-        {
-            "user_id": 11,
-            "intro": "Hello, I am a tutor.",
-            "bio": "I have been tutoring for several years. I am very experienced and excited to help you learn whatever subject you'd like!",
-            "price": 35.0
-        },
-        {
-            "user_id": 12,
-            "intro": "Hello, I am a tutor.",
-            "bio": "I have been tutoring for several years. I am very experienced and excited to help you learn whatever subject you'd like!",
-            "price": 35.0
-        },
-        {
-            "user_id": 14,
-            "intro": "Hello, I am a tutor.",
-            "bio": "I have been tutoring for several years. I am very experienced and excited to help you learn whatever subject you'd like!",
-            "price": 35.0
-        },
-        {
-            "user_id": 15,
-            "intro": "Hello, I am a tutor.",
-            "bio": "I have been tutoring for several years. I am very experienced and excited to help you learn whatever subject you'd like!",
-            "price": 35.0
-        },
-    ]
+    """Only create explicitly fictional records in a reserved non-login namespace.
+    Legacy IDs 11/12/14/15 cannot be positively classified and are untouched.
+    """
+    for slug, first, last, subject_name in [
+        ("math-guide", "Alex", "Sample", "Algebra"),
+        ("coding-guide", "Morgan", "Example", "Python"),
+    ]:
+        auth_id = f"demo:seed-v1:{slug}"
+        existing = db.query(User).filter(User.auth_id == auth_id).first()
+        if existing:
+            # Fail closed if the reserved identifier is unexpectedly associated with a real profile.
+            if not existing.tutor_profile or not existing.tutor_profile.is_demo:
+                raise RuntimeError("Reserved demo identifier already exists without demo provenance; review manually")
+            continue
+        user = User(auth_id=auth_id, email=f"{slug}@example.invalid", first_name=first, last_name=last,
+                    role=UserRole.TUTOR, timezone="America/New_York")
+        profile = TutorProfile(user=user, intro="Fictional demonstration tutor. Not available for real appointments.",
+            bio="Sample profile created only to demonstrate the TutorME interface. This is not a real tutor.",
+            price=35, is_demo=True, online_enabled=True, in_person_enabled=False)
+        subject = db.query(Subject).filter(Subject.name == subject_name).first()
+        if subject:
+            profile.subjects = [subject]
+        db.add(profile)
 
-    for tutor in tutors:
-        existing = (
-            db.query(TutorProfile)
-            .filter(TutorProfile.user_id == tutor["user_id"])
-            .first()
-        )
 
-        if not existing:
-            db.add(
-                TutorProfile(
-                    user_id=tutor["user_id"],
-                    intro=tutor["intro"],
-                    bio=tutor["bio"],
-                    price=tutor["price"]
-                )
-            )
-
-def seed():
+def seed(include_demo_tutors=False):
     with SessionLocal() as db:
         try:
             seed_subjects(db)
-            seed_tutor_profiles(db)
+            if include_demo_tutors:
+                seed_tutor_profiles(db)
             db.commit()
         except:
             db.rollback()
             raise
 
 if __name__ == "__main__":
-    seed()
+    import argparse
+    parser = argparse.ArgumentParser(description="Explicit catalog/demo seed; never run automatically")
+    parser.add_argument("--include-demo-tutors", action="store_true")
+    seed(parser.parse_args().include_demo_tutors)
 
         
