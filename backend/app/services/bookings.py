@@ -1,3 +1,4 @@
+from decimal import Decimal, InvalidOperation
 from datetime import datetime, timedelta, timezone, date, time
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from uuid import uuid4
@@ -7,7 +8,8 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from app.models.booking import Booking
 from app.models.user import User, UserRole
-from app.models.tutor_profile import TutorProfile
+from app.models.tutor_profile import TutorProfile, tutor_subjects
+from app.models.subject import Subject
 from app.models.tutor_availability import TutorAvailability
 from app.schemas.booking import BookingCreate
 from app.services.deletion import account_has_active_deletion
@@ -19,6 +21,13 @@ UTC = timezone.utc
 def utc(value):
     # SQLite fixtures return naive values; PostgreSQL stores timezone-aware instants.
     return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+
+
+def effective_status(booking, now=None):
+    # Expiry is derived, preserving existing records and the current DB constraint.
+    if booking.status == "pending" and utc(booking.starts_at) <= (now or datetime.now(UTC)):
+        return "expired"
+    return booking.status
 
 
 def booking_gate():
@@ -109,9 +118,26 @@ def lock_participants(db, tutor_id, student_id):
     if not tutor:
         raise HTTPException(404, "Tutor not found")
     # Shared order prevents lock inversion when the same participant is involved.
-    db.scalars(select(User).where(User.id.in_(sorted({student_id, tutor.user_id}))).order_by(User.id).with_for_update()).all()
+    db.scalars(select(User).where(User.id.in_(sorted({student_id, tutor.user_id}))).order_by(User.id)
+        .with_for_update().execution_options(populate_existing=True)).all()
     return db.scalar(select(TutorProfile).where(TutorProfile.id == tutor_id).with_for_update().execution_options(populate_existing=True))
 
+
+
+def authoritative_rate(tutor):
+    # Existing profile storage is Float; convert its decimal text once, never do
+    # floating-point arithmetic or silently round a legacy fractional-cent rate.
+    try:
+        rate = Decimal(str(tutor.price))
+        if not rate.is_finite() or not 0 <= rate <= 10000 or rate != rate.quantize(Decimal("0.01")):
+            raise ValueError()
+        return rate.quantize(Decimal("0.01"))
+    except (InvalidOperation, ValueError, TypeError):
+        raise HTTPException(409, {"code": "QUOTE_CHANGED", "message": "The tutor must update their hourly rate before a session can be requested."})
+
+
+def same_quote(booking, data):
+    return booking.subject_id == data.subject_id and booking.hourly_rate_snapshot == data.expected_hourly_rate
 
 def submit(db: Session, user: User, data: BookingCreate):
     booking_gate(); adult(user)
@@ -120,6 +146,9 @@ def submit(db: Session, user: User, data: BookingCreate):
     if account_has_active_deletion(db, user.id):
         raise HTTPException(403, "New bookings are paused while your deletion request is reviewed")
     tutor = lock_participants(db, data.tutor_id, user.id)
+    adult(user)
+    if account_has_active_deletion(db, user.id):
+        raise HTTPException(403, "New bookings are paused while your deletion request is reviewed")
     real_tutor(tutor); adult(tutor.user); supported(tutor, data.mode)
     if account_has_active_deletion(db, tutor.user_id):
         raise HTTPException(409, "This tutor is not accepting new appointment requests")
@@ -128,7 +157,7 @@ def submit(db: Session, user: User, data: BookingCreate):
     start, end = utc(data.starts_at), utc(data.starts_at) + timedelta(hours=1)
     previous = db.scalar(select(Booking).where(Booking.student_id == user.id, Booking.idempotency_key == data.idempotency_key))
     if previous:
-        if previous.tutor_id != tutor.id or previous.mode != data.mode or utc(previous.starts_at) != start:
+        if previous.tutor_id != tutor.id or previous.mode != data.mode or utc(previous.starts_at) != start or not same_quote(previous, data):
             raise HTTPException(409, "Idempotency key was already used for a different request")
         return previous
     now = datetime.now(UTC)
@@ -143,12 +172,28 @@ def submit(db: Session, user: User, data: BookingCreate):
     if duplicate:
         if duplicate.mode != data.mode:
             raise HTTPException(409, "You already have a pending request for this time in another lesson format. Cancel it before changing formats.")
+        if not same_quote(duplicate, data):
+            raise HTTPException(409, "A pending request already exists for this time with different subject or quote details. Review or cancel it before making a new request.")
         return duplicate
-    pending_count = db.scalar(select(func.count()).select_from(Booking).where(Booking.student_id == user.id, Booking.status == "pending")) or 0
+    # Participant locks precede the profile lock. Profile edits share that lock;
+    # read the association fresh instead of relying on a cached relationship.
+    subject = db.scalar(select(Subject).join(tutor_subjects, Subject.id == tutor_subjects.c.subject_id)
+        .where(tutor_subjects.c.tutor_id == tutor.id, Subject.id == data.subject_id)
+        .with_for_update(read=True, of=Subject))
+    if subject is None:
+        raise HTTPException(409, {"code": "SUBJECT_UNAVAILABLE", "message": "This tutor no longer offers the selected subject. Refresh the booking details and choose a subject."})
+    rate = authoritative_rate(tutor)
+    if data.expected_hourly_rate != rate:
+        raise HTTPException(409, {"code": "QUOTE_CHANGED", "message": "The tutor's rate has changed. Refresh the booking details and review the new quote before submitting."})
+    pending_count = db.scalar(select(func.count()).select_from(Booking).where(Booking.student_id == user.id,
+        Booking.status == "pending", Booking.starts_at > now)) or 0
     if pending_count >= 20:
         raise HTTPException(429, "Review or cancel existing requests before submitting more appointments")
     booking = Booking(id=str(uuid4()), student_id=user.id, tutor_id=tutor.id, mode=data.mode, starts_at=start,
-                      ends_at=end, status="pending", idempotency_key=data.idempotency_key)
+                      ends_at=end, status="pending", idempotency_key=data.idempotency_key,
+                      subject_id=subject.id, subject_name_snapshot=subject.name,
+                      hourly_rate_snapshot=rate, currency_snapshot="USD",
+                      duration_minutes_snapshot=60, session_amount_snapshot=rate * Decimal(60) / Decimal(60))
     db.add(booking); db.commit(); db.refresh(booking)
     return booking
 
@@ -201,8 +246,10 @@ def public_to_participants(db, booking):
     tutor = db.get(TutorProfile, booking.tutor_id)
     student = db.get(User, booking.student_id)
     return {"id": booking.id, "student_id": booking.student_id, "tutor_id": booking.tutor_id,
+            **{name: getattr(booking, name) for name in ("subject_id", "subject_name_snapshot", "hourly_rate_snapshot",
+                "currency_snapshot", "duration_minutes_snapshot", "session_amount_snapshot")},
             "mode": booking.mode, "starts_at": utc(booking.starts_at), "ends_at": utc(booking.ends_at),
-            "status": booking.status, "created_at": utc(booking.created_at),
+            "status": effective_status(booking), "created_at": utc(booking.created_at),
             "meeting_details": booking.meeting_details if booking.status == "confirmed" else None,
             "student_name": f"{student.first_name} {student.last_name}",
             "tutor_name": f"{tutor.user.first_name} {tutor.user.last_name}"}

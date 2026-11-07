@@ -1,6 +1,7 @@
 from app.schemas.base import APIModel
 from app.schemas.location import ServiceAreaResponse
-from pydantic import Field
+from pydantic import Field, field_validator
+from decimal import Decimal
 
 class SubjectSummary(APIModel):
     id: int
@@ -36,7 +37,14 @@ class TutorProfileResponse(APIModel):
 class TutorProfileUpdate(APIModel):
     intro: str | None = None
     bio: str | None = None
-    price: float | None = Field(default=None, ge=0, le=10000, allow_inf_nan=False)
+    price: Decimal | None = Field(default=None, ge=0, le=10000, decimal_places=2, allow_inf_nan=False)
+    @field_validator("price")
+    @classmethod
+    def price_must_be_present(cls, value):
+        if value is None:
+            raise ValueError("Hourly rate cannot be empty")
+        return value
+
     subject_ids: list[int] | None = Field(default=None, max_length=50)
     availability: list[TutorAvailabilitySummary] | None = None
 

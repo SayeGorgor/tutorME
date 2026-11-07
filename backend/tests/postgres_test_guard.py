@@ -7,6 +7,10 @@ from sqlalchemy.pool import NullPool
 
 PROTECTED_BRANCH = "br-royal-bird-ax5hkimq"
 PROTECTED_ENDPOINT = "ep-sparkling-voice-ax3w37ou"
+DEVELOPMENT_BRANCH = "br-odd-cake-axy2uqro"
+DEVELOPMENT_ENDPOINT = "ep-lucky-resonance-ax8nmonu"
+EXCLUDED_BRANCHES = {PROTECTED_BRANCH, DEVELOPMENT_BRANCH}
+EXCLUDED_ENDPOINTS = {PROTECTED_ENDPOINT, DEVELOPMENT_ENDPOINT}
 STATEMENT_TIMEOUT_MS = 15000
 LOCK_TIMEOUT_MS = 5000
 
@@ -25,8 +29,8 @@ def approved_target(environment):
     project, branch, database = (environment.get(key, "") for key in ("TUTORME_TEST_PROJECT_ID", "TUTORME_TEST_BRANCH_ID", "TUTORME_TEST_DATABASE_NAME"))
     if not re.fullmatch(r"[a-z0-9-]{1,60}", project) or not re.fullmatch(r"br-[a-z0-9-]{1,60}", branch) or not database:
         raise RuntimeError("Explicit expected project, branch and database identifiers are required")
-    if branch == PROTECTED_BRANCH:
-        raise RuntimeError("The inspected Neon branch is permanently excluded from this test")
+    if branch in EXCLUDED_BRANCHES:
+        raise RuntimeError("Established production/development branches are excluded from this disposable test")
     raw = environment.get("TUTORME_TEST_DATABASE_URL", "")
     try:
         url = make_url(raw)
@@ -34,7 +38,7 @@ def approved_target(environment):
         raise RuntimeError("Provide a valid disposable PostgreSQL connection privately") from None
     if url.drivername != "postgresql+psycopg" or not url.host or url.database != database:
         raise RuntimeError("Use a matching PostgreSQL psycopg database target")
-    if url.host.split('.')[0].replace('-pooler', '') == PROTECTED_ENDPOINT:
+    if url.host.split('.')[0].replace('-pooler', '') in EXCLUDED_ENDPOINTS:
         raise RuntimeError("The inspected endpoint is permanently excluded from this test")
     if '-pooler.' in url.host:
         raise RuntimeError("Use a direct endpoint for isolated-schema administrative tests")
@@ -56,8 +60,8 @@ def verify_connection(connection, target):
         if connection.scalar(text('SHOW transaction_read_only')) != 'on':
             raise RuntimeError('Read-only target verification failed')
         actual = connection.execute(text("SELECT current_setting('neon.project_id',true), current_setting('neon.branch_id',true), current_database()" )).one()
-        if actual[1] == PROTECTED_BRANCH:
-            raise RuntimeError('The actual database is the protected inspected branch')
+        if actual[1] in EXCLUDED_BRANCHES:
+            raise RuntimeError('The actual database is an excluded established branch')
         if tuple(actual) != (target.project, target.branch, target.database):
             raise RuntimeError('Actual database identity does not match the approved disposable target')
     finally:

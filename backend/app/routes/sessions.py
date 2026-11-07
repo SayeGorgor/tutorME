@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone, time
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from urllib.parse import urlparse
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -21,6 +21,8 @@ def slots(tutor_id: int, day: date, mode: str = Query(pattern="^(online|in-perso
     service.booking_gate()
     tutor = db.get(TutorProfile, tutor_id)
     service.real_tutor(tutor); service.adult(tutor.user); service.supported(tutor, mode)
+    if service.account_has_active_deletion(db, tutor.user_id):
+        raise HTTPException(409, "This tutor is not accepting new appointment requests")
     try:
         display_zone = ZoneInfo(timezone_name)
     except (ZoneInfoNotFoundError, ValueError):
@@ -33,12 +35,20 @@ def slots(tutor_id: int, day: date, mode: str = Query(pattern="^(online|in-perso
         Booking.ends_at > now, Booking.starts_at < now + timedelta(days=32))).all()
     result = set()
     for row in rows:
-        for offset in (-1, 0, 1):
-            window = service.row_window(row, day + timedelta(days=offset))
+        try:
+            row_zone = ZoneInfo(row.timezone)
+        except (ZoneInfoNotFoundError, ValueError):
+            continue
+        # At extreme UTC offsets, the availability date can differ by two days
+        # from the viewer's date. Derive the covered dates instead of guessing ±1.
+        first_day = datetime.combine(day, time.min, tzinfo=display_zone).astimezone(row_zone).date()
+        last_day = (datetime.combine(day + timedelta(days=1), time.min, tzinfo=display_zone)
+                    - timedelta(microseconds=1)).astimezone(row_zone).date()
+        for offset in range((last_day - first_day).days + 1):
+            window = service.row_window(row, first_day + timedelta(days=offset))
             if not window:
                 continue
             start = window[0]
-            row_zone = ZoneInfo(row.timezone)
             while start + timedelta(hours=1) <= window[1]:
                 end = start + timedelta(hours=1)
                 if service.unambiguous(start, row_zone) and service.unambiguous(end, row_zone) and now < start <= now + timedelta(days=30) and start.astimezone(display_zone).date() == day and not any(service.utc(b.starts_at) < end and service.utc(b.ends_at) > start for b in confirmed):

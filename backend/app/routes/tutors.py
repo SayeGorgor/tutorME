@@ -83,6 +83,7 @@ def update_tutor_by_user_id(
     tutor = db.scalars(
         select(TutorProfile)
         .where(TutorProfile.user_id == user_id)
+        .with_for_update().execution_options(populate_existing=True)
     ).first()
     if not tutor:
         logger.exception("Tutor not found for user_id: %s", user_id)

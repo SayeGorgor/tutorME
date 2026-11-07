@@ -163,7 +163,10 @@ export type TutorSearchResponse = { items: TutorSearchItem[]; total: number; lim
 
 export type Booking = {
   id: string; studentId: number; tutorId: number; mode: "online" | "in-person";
-  startsAt: string; endsAt: string; status: "pending" | "confirmed" | "declined" | "cancelled" | "completed";
+  startsAt: string; endsAt: string; status: "pending" | "confirmed" | "declined" | "cancelled" | "completed" | "expired";
+  subjectId?: number | null; subjectNameSnapshot?: string | null;
+  hourlyRateSnapshot?: string | null; currencySnapshot?: string | null;
+  durationMinutesSnapshot?: number | null; sessionAmountSnapshot?: string | null;
   meetingDetails: string | null; studentName: string; tutorName: string; createdAt: string;
 };
 

@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/api-helper";
-import { authClient } from "@/lib/auth/client";
+import { authorized } from "@/lib/api/authorized";
 
 import { 
   Subject, 
@@ -41,108 +41,21 @@ import {
 // };
 
 /* USER ACTIONS */
-export const createUser = async (user: CreateUserSchema): Promise<APIResponse<User>> => {
-  try {
-    const { data: tokenData } = await authClient.token();
-    if (!tokenData?.token) return { error: { status: 401, message: "Sign in to finish creating your account." } };
-    const { data: response, error: resError } = await apiFetch<User>("/api/users", {
-      headers: { Authorization: `Bearer ${tokenData.token}` },
-      method: "POST",
-      body: {
-        adultConfirmed: user.adultConfirmed, termsAccepted: user.termsAccepted,
-        termsVersion: user.termsVersion, accountPurpose: user.accountPurpose,
-        auth_id: user.authID, 
-        first_name: user.firstName,
-        last_name: user.lastName,
-        email: user.email, 
-        role: user.role,
-        timezone: user.timezone
-      },
-    });
-    if (resError) {
-      return { error: resError };
-    }
-    return { data: response };
-  } catch (error) {
-    console.error("Error signing up:", error);
-    return { error: { 
-      status: 500,
-      message: (error as Error).message || "Error signing up" 
-    } };
-  }
-};
+export const createUser = (user: CreateUserSchema): Promise<APIResponse<User>> => authorized<User>("/api/users/", "POST", {
+  adultConfirmed: user.adultConfirmed, termsAccepted: user.termsAccepted,
+  termsVersion: user.termsVersion, accountPurpose: user.accountPurpose,
+  auth_id: user.authID, first_name: user.firstName, last_name: user.lastName,
+  email: user.email, role: user.role, timezone: user.timezone,
+});
 
-export const getCurrentUser = async (): Promise<APIResponse<User>> => {
-  try {
-    const { data: tokenData } = await authClient.token();
-    
-    const { data: response, error: resError } = await apiFetch<User>('/api/users/me', {
-        headers: {
-            Authorization: `Bearer ${tokenData?.token}`
-        }
-    });
-    if (resError) {
-      return { error: resError };
-    }
-    return { data: response };
-  } catch (error) {
-    console.error("Error getting current user:", error);
-    return { error: { 
-      status: 500,
-      message: (error as Error).message || "Error getting current user" 
-    } };
-  }
-};
+export const getCurrentUser = (): Promise<APIResponse<User>> => authorized<User>("/api/users/me");
 
-export const updateTutorProfile = async (inputData: UpdateTutorProfileSchema): Promise<APIResponse<TutorProfile>> => {
-  const { userId, tutorProfileData } = inputData;
-  
-  try {
-    const { data: tokenData } = await authClient.token();
-    
-    const { data: response, error: resError } = await apiFetch<TutorProfile>(`/api/tutors/user/${userId}`, {
-        method: "PATCH",
-        headers: {
-            Authorization: `Bearer ${tokenData?.token}`
-        },
-        body: tutorProfileData
-    });
-     if (resError) {
-       return { error: resError };
-     }
-     return { data: response }
-  } catch (error) {
-    return { error: { 
-      status: 500,
-      message: (error as Error).message || "Error updating tutor profile" 
-    } }
-  }
-};
+export const updateTutorProfile = ({ userId, tutorProfileData }: UpdateTutorProfileSchema): Promise<APIResponse<TutorProfile>> =>
+  authorized<TutorProfile>(`/api/tutors/user/${userId}`, "PATCH", tutorProfileData);
 
-export const updateTutorAvailability = async (inputData: UpdateTutorAvailabilitySchema): Promise<APIResponse<Availability[]>> => {
-  const { tutorID, availabilityData } = inputData;
-  
-  try {
-    const { data: tokenData } = await authClient.token();
-    
-    const { data: response, error} = await apiFetch<{availability: Availability[]}>(`/api/tutors/${tutorID}/availability`, {
-        method: "PUT",
-        headers: {
-            Authorization: `Bearer ${tokenData?.token}`
-        },
-        body: availabilityData
-    });
-
-    if (error) {
-      return { error };
-    }
-    return { data: response?.availability }
-  } catch (error) {
-    return { error: { 
-      status: 500,
-      message: (error as Error).message || "Error updating tutor profile" 
-    } }
-  }
+export const updateTutorAvailability = async ({ tutorID, availabilityData }: UpdateTutorAvailabilitySchema): Promise<APIResponse<Availability[]>> => {
+  const result = await authorized<{ availability: Availability[] }>(`/api/tutors/${tutorID}/availability`, "PUT", availabilityData);
+  return result.error ? { error: result.error } : { data: result.data?.availability };
 };
 
 export const getTutors = async (): Promise<APIResponse<TutorProfile[]>> => {

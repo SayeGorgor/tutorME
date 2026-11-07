@@ -2,8 +2,7 @@
 import { useState } from "react";
 import type { ServiceArea, TutorProfile } from "@/lib/types";
 import ServiceAreaPicker from "./ServiceAreaPicker";
-import { apiFetch } from "@/lib/api/api-helper";
-import { authClient } from "@/lib/auth/client";
+import { authorized } from "@/lib/api/authorized";
 import SubjectsYouTeach from "./SubjectsYouTeach";
 
 export default function TutorLocationSettings({ tutor, onSaved }: { tutor: TutorProfile; onSaved: (tutor: TutorProfile) => void }) {
@@ -25,12 +24,10 @@ export default function TutorLocationSettings({ tutor, onSaved }: { tutor: Tutor
       if (inPerson && (!area || !consent)) { setMessage("Choose a service area and confirm public area display."); return; }
       setSaving(true); setMessage("");
       try {
-        const { data, error } = await authClient.token();
-        if (error || !data?.token) { setMessage("Please log in again before saving."); return; }
-        const result = await apiFetch<TutorProfile>(`/api/tutors/user/${tutor.userId}/location`, { method: "PUT", headers: { Authorization: `Bearer ${data.token}` }, body: {
+        const result = await authorized<TutorProfile>(`/api/tutors/user/${tutor.userId}/location`, "PUT", {
           onlineEnabled: online, inPersonEnabled: inPerson, serviceAreaId: inPerson ? area?.id : null,
           placeId: placeId || null, travelRadiusMiles: radius, meetingPreferences: preferences || null, publicAreaConsent: consent,
-        } });
+        });
         if (result.error || !result.data) { setMessage(result.error?.message || "Unable to save preferences."); return; }
         onSaved(result.data); setMessage("Tutoring preferences saved.");
       } catch { setMessage("Unable to save preferences. Please try again."); } finally { setSaving(false); }

@@ -1,4 +1,5 @@
 import logging
+import re
 
 import jwt
 from jwt import PyJWKClient
@@ -31,6 +32,8 @@ jwks_client = PyJWKClient(NEON_AUTH_JWKS_URL)
 
 def get_identity(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
+    if not re.fullmatch(r"[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", token):
+        raise HTTPException(status_code=401, detail="Invalid token")
 
     try:
         signing_key = jwks_client.get_signing_key_from_jwt(token)
@@ -45,14 +48,14 @@ def get_identity(credentials: HTTPAuthorizationCredentials = Depends(security)):
         )
     
     except jwt.ExpiredSignatureError:
-        logger.exception("Token has expired")
+        logger.info("Authentication token expired")
         raise HTTPException(
             status_code=401, 
             detail="Token has expired"
         )
     
     except (jwt.InvalidTokenError, jwt.PyJWKClientError):
-        logger.exception("Invalid token")
+        logger.info("Authentication token rejected")
         raise HTTPException(
             status_code=401,
             detail="Invalid token"
@@ -61,7 +64,7 @@ def get_identity(credentials: HTTPAuthorizationCredentials = Depends(security)):
     auth_id = payload.get("sub")
 
     if not isinstance(auth_id, str) or not auth_id.strip():
-        logger.exception("Invalid Auth ID")
+        logger.info("Authentication subject rejected")
         raise HTTPException(
             status_code=401,
             detail="Invalid Auth ID"

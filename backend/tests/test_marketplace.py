@@ -48,7 +48,15 @@ class MarketplaceTests(unittest.TestCase):
         app.dependency_overrides[get_current_user] = lambda: user
 
     def create_booking(self, **overrides):
-        return self.client.post("/api/bookings", json={"tutorId": 1, "mode": "online", "startsAt": self.start.isoformat(), "idempotencyKey": str(uuid4()), **overrides})
+        # Opt-in synthetic booking subjects leave non-booking fixtures unchanged.
+        from app.models.subject import Subject, SubjectCategory
+        if not self.db.get(Subject, 900):
+            subject = Subject(id=900, name="Fixture Math", category=SubjectCategory.MATH)
+            self.db.add(subject)
+            for tutor in self.db.scalars(select(TutorProfile)).all():
+                tutor.subjects = [subject]
+            self.db.commit()
+        return self.client.post("/api/bookings", json={"subjectId": 900, "expectedHourlyRate": "30.00", "tutorId": 1, "mode": "online", "startsAt": self.start.isoformat(), "idempotencyKey": str(uuid4()), **overrides})
 
     def test_pending_confirm_private_details_and_cancel(self):
         response = self.create_booking(); self.assertEqual(response.status_code, 200, response.text)
