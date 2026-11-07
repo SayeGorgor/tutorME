@@ -10,7 +10,7 @@ export default function TutorLayout({
             <div className="w-full shrink-0 lg:w-1/6 lg:min-w-52">
                 <ProtectedTutorNav />
             </div>
-            <main className="flex min-w-0 flex-1">
+            <main className="account-content flex min-w-0 flex-1">
                 {children}
             </main>
         </div>

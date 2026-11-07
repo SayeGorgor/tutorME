@@ -96,3 +96,16 @@
  .page :global(.note-symbol) { font-size: 2.5rem; margin: .75rem 0; }
  .page :global(.note-footer) { margin-top: 1rem; padding-top: .75rem; }
 }
+
+/* Keep the decorative note out of the narrower tablet hero's text column. */
+@media (40rem <= width < 64rem) {
+ .page :global(#top-card-main-content) { flex-direction: column; align-items: stretch; }
+ .page :global(#top-card-main-content-right) { align-self: center; width: 100%; }
+}
+.page :global(.subject-options button) { min-height: 2.75rem; overflow-wrap: anywhere; }
+.page :global(.subject-options) { overscroll-behavior: contain; }
+
+@media (width < 40rem) {
+ .page :global(.search-submit) { min-width: 0; flex-wrap: wrap; white-space: normal; padding-inline: .5rem; }
+ .page :global(.section-heading) a { white-space: normal; }
+}

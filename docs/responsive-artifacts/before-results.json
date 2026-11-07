@@ -1,0 +1,50 @@
+[
+  {
+    "name": "tutor-editor",
+    "theme": "light",
+    "width": 390,
+    "scrollWidth": 1522,
+    "overflow": [
+      {
+        "tag": "DIV",
+        "id": "tutor-profile-card-left",
+        "class": "flex gap-6"
+      },
+      {
+        "tag": "DIV",
+        "id": "tutor-info",
+        "class": "flex flex-col gap-2"
+      },
+      {
+        "tag": "DIV",
+        "id": "",
+        "class": "flex flex-col gap-1"
+      },
+      {
+        "tag": "P",
+        "id": "",
+        "class": "font-bold text-3xl"
+      },
+      {
+        "tag": "DIV",
+        "id": "",
+        "class": "flex flex-wrap gap-2 text-sm font-semibold"
+      },
+      {
+        "tag": "SPAN",
+        "id": "",
+        "class": "w-fit rounded-full bg-blue-200 px-3 py-1 text-blue-800"
+      },
+      {
+        "tag": "SPAN",
+        "id": "",
+        "class": "w-fit rounded-full border border-blue-200 bg-white/70 px-3 py-1 text-blue-800"
+      },
+      {
+        "tag": "P",
+        "id": "",
+        "class": "text-lg font-bold"
+      }
+    ]
+  }
+]

@@ -1,15 +1,15 @@
 'use client';
+import { subjectSummary } from "@/lib/subject-summary";
 import TutorLocationBadges from "@/components/TutorLocationBadges";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import React from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 import BookingRequest from "@/components/BookingRequest";
 import { areaLabel } from "@/components/ServiceAreaPicker";
-import ChoiceArrowsIcon from "@/public/icons/choice_arrows_icon.svg";
-import CalendarIcon from "@/public/icons/calendar_icon.svg";
+import AvailabilityControls from "@/components/AvailabilityControls";
 
 import type { TutorProfile } from "@/lib/types";
 import { AVAILABILITY_TIMES, DAYS } from "@/constants/constants";
@@ -30,7 +30,6 @@ export default function TutorProfilePage({
     const times = AVAILABILITY_TIMES;
     const days = DAYS;
 
-    const dateInputRef = useRef<HTMLInputElement>(null);
     
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(null);
@@ -38,7 +37,6 @@ export default function TutorProfilePage({
     const [sysMessage, setSysMessage] = useState("");
 
     const [availabilityType, setAvailabilityType] = useState<"weekly" | "custom">("weekly");
-    const [showAvailabilityTypeDropdown, setShowAvailabilityTypeDropdown] = useState(false);
     const [currentTimePage, setCurrentTimePage] = useState(0);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString());
     
@@ -74,7 +72,7 @@ export default function TutorProfilePage({
     }, [params]);
 
     return (
-        <div className="flex min-w-0 flex-col gap-2 p-4 sm:p-6 lg:p-8 [overflow-wrap:anywhere]">
+        <div className="location-ui mx-auto flex w-full max-w-[100rem] min-w-0 flex-col gap-2 p-4 sm:p-6 lg:p-8 [overflow-wrap:anywhere]">
             <button 
                 className="min-h-11 lg:min-h-0 self-start cursor-pointer text-blue-700 hover:underline"
                 onClick={() => router.back()}
@@ -111,7 +109,7 @@ export default function TutorProfilePage({
                                     <TutorLocationBadges tutor={tutorProfile} />
 
                                 </div>
-                                <p className="text-lg font-bold">{tutorProfile.subjects.map(subject => subject.name).join(" / ") || "Subjects not listed yet"}</p>
+                                <p className="text-lg font-bold">{subjectSummary(tutorProfile.subjects)}</p>
                                 <p className="text-sm">{[tutorProfile.onlineEnabled && "Online lessons", tutorProfile.inPersonEnabled && "In-person lessons"].filter(Boolean).join(" / ")}</p>
                                 {tutorProfile.inPersonEnabled && tutorProfile.serviceArea && <div className="location-ui rounded-xl bg-blue-50 p-3 text-sm"><p>{areaLabel(tutorProfile.serviceArea)} / Travels up to {tutorProfile.travelRadiusMiles} miles</p><p className="text-slate-600">Approximate public service area, not a meeting address.</p>{tutorProfile.meetingPreferences && <p>{tutorProfile.meetingPreferences}</p>}</div>}
                                 <p className="w-full max-w-[37.5rem]">{tutorProfile.intro?.trim() || "This tutor has not added an introduction yet."}</p>
@@ -125,11 +123,11 @@ export default function TutorProfilePage({
                     </div>
 
                     <BookingRequest tutor={tutorProfile} />
-                    <div id="additional-info-section" className="flex min-w-0 flex-col gap-6 mt-4 xl:flex-row xl:gap-10">
+                    <div id="additional-info-section" className="flex min-w-0 flex-col gap-6 mt-4 2xl:flex-row 2xl:gap-10">
                         <div id="additional-info-section-left" className="flex min-w-0 flex-5 flex-col gap-5">
                             <div className="flex flex-col gap-1">
                                 <p className="text-xl font-bold">About {tutorProfile.user.firstName}</p>
-                                <p className="text-md">{tutorProfile.bio}</p>
+                                <p className="max-w-prose text-base">{tutorProfile.bio}</p>
                             </div>
 
                             <div className="flex flex-col gap-1">
@@ -141,84 +139,21 @@ export default function TutorProfilePage({
                                 <p className="text-xl font-bold">Reviews</p>
                             </div>
                         </div>
-                        <div id="additional-info-section-right" className="flex min-w-0 flex-3 flex-col justify-center gap-1 xl:min-w-[28rem]">
+                        <div id="additional-info-section-right" className="flex min-w-0 flex-3 flex-col justify-center gap-1 2xl:min-w-[39rem]">
                             <h3 className="text-xl font-bold ml-3.5">Availability - <span className="text-lg">{currentTimePage > 3 ? 'PM' : 'AM'}</span></h3>
 
                             
-                                <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-6">
-                                    <div className="relative flex items-center">
-                                        <button 
-                                            className="flex min-h-11 lg:min-h-0 items-center cursor-pointer"
-                                            onClick={() => setShowAvailabilityTypeDropdown(!showAvailabilityTypeDropdown)}
-                                        >
-                                            <h4 className="text-lg font-semibold">
-                                                {availabilityType === "weekly" ? "Weekly" : "Custom"}
-                                            </h4>
-                                            <ChoiceArrowsIcon className="w-5 h-5" />
-                                        </button>
-
-                                        <div
-                                            id="availability-type-dropdown"
-                                            className={`absolute top-full left-0 mt-2 w-40 bg-white border border-gray-700 rounded-lg shadow-lg z-10 ${showAvailabilityTypeDropdown ? 'block' : 'hidden'}`}
-                                        >
-                                            <div
-                                                className="px-4 py-2 cursor-pointer rounded-t-lg hover:bg-gray-200"
-                                                onClick={() => {
-                                                    setAvailabilityType("weekly");
-                                                    setShowAvailabilityTypeDropdown(false);
-                                                }}
-                                            >
-                                                Weekly
-                                            </div>
-                                            <div
-                                                className="px-4 py-2 cursor-pointer rounded-b-lg hover:bg-gray-200"
-                                                onClick={() => {
-                                                    setAvailabilityType("custom");
-                                                    setShowAvailabilityTypeDropdown(false);
-                                                }}
-                                            >
-                                                Custom
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {availabilityType === "custom" && (
-                                        <div className="flex flex-wrap gap-2">
-                                            <h3 className="text-lg items-center font-semibold">
-                                                {weekDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {weekDates[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, {weekDates[6].getFullYear()}
-                                            </h3>
-                                            <div>
-                                                <button 
-                                                    onClick={() => dateInputRef.current?.showPicker()}
-                                                    className="flex min-h-11 min-w-11 items-center justify-center cursor-pointer"
-                                                    aria-label="Select date"
-                                                >
-                                                    <CalendarIcon className="w-6 h-6" />
-                                                </button>
-                                                <input
-                                                    ref={dateInputRef}
-                                                    type="date"
-                                                    value={selectedDate}
-                                                    onChange={(e) => setSelectedDate(e.target.value)}
-                                                    className="sr-only"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-
-                            <p className="text-sm text-gray-600 sm:hidden">Scroll horizontally to view all availability times.</p>
-                            <div className="min-w-0 overflow-x-auto pb-2" role="region" aria-label="Tutor availability calendar" tabIndex={0}>
-                            <div className="grid min-w-[28rem] grid-cols-8 gap-2">
+                            <AvailabilityControls type={availabilityType} onTypeChange={setAvailabilityType} selectedDate={selectedDate} onDateChange={setSelectedDate} />
+                            <p className="text-sm text-slate-600">Scroll horizontally to view all availability times.</p>
+                            <div className="calendar-scroll" role="region" aria-label="Tutor availability calendar" tabIndex={0}>
+                            <div className="grid min-w-[34rem] grid-cols-8 gap-2">
                                 <button 
-                                    aria-label="Previous availability times"
-                                    onClick={() => setCurrentTimePage(currentTimePage > 0 ? currentTimePage - 1 : 7)}
-                                    className="flex min-h-11 lg:min-h-6 items-center justify-center font-semibold text-center cursor-pointer"
+                                    aria-label="Previous availability times" onClick={() => setCurrentTimePage(currentTimePage > 0 ? currentTimePage - 1 : 7)}
+                                    className="flex min-h-11  items-center justify-center font-semibold text-center cursor-pointer"
                                 >
                                     &lt;
                                 </button>
-                                <div className="flex min-h-11 lg:min-h-6 items-center overflow-hidden col-span-6">
+                                <div className="flex min-h-11  items-center overflow-hidden col-span-6">
                                     <div
                                         className="flex w-full min-w-0 shrink-0 transition-transform duration-300 ease-in-out"
                                         style={{
@@ -230,7 +165,7 @@ export default function TutorProfilePage({
                                                 {page.map((time, timeIndex) => (
                                                     <div
                                                         key={timeIndex}
-                                                        className="shrink-0 text-center font-semibold h-6"
+                                                        className="shrink-0 text-center font-semibold min-h-6"
                                                     >
                                                         {time}
                                                     </div>
@@ -240,9 +175,8 @@ export default function TutorProfilePage({
                                     </div>
                                 </div> 
                                 <button 
-                                    aria-label="Next availability times"
-                                    onClick={() => setCurrentTimePage(currentTimePage < 7 ? currentTimePage + 1 : 0)}
-                                    className="flex min-h-11 lg:min-h-6 items-center justify-center font-semibold text-center cursor-pointer"
+                                    aria-label="Next availability times" onClick={() => setCurrentTimePage(currentTimePage < 7 ? currentTimePage + 1 : 0)}
+                                    className="flex min-h-11  items-center justify-center font-semibold text-center cursor-pointer"
                                 >
                                     &gt;
                                 </button>

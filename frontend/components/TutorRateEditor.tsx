@@ -12,12 +12,12 @@ export default function TutorRateEditor({ tutor, onSaved }: { tutor: TutorProfil
   const [message, setMessage] = useState("");
   const pending = useRef(false);
 
-  if (!editing) return <div className="flex flex-col items-start gap-2 xl:items-end">
+  if (!editing) return <div className="touch-controls flex min-w-0 flex-col items-start gap-2 xl:items-end">
     <p className="text-lg text-gray-600"><span className="text-2xl font-bold text-slate-900">${tutor.price}</span> / hr</p>
     <button type="button" className="text-sm font-semibold text-blue-700 hover:underline" onClick={() => { setRate(String(tutor.price)); setMessage(""); setEditing(true); }}>Edit hourly rate</button>
   </div>;
 
-  return <form className="flex max-w-xs flex-col gap-2" onSubmit={async event => {
+  return <form className="touch-controls flex min-w-0 w-full max-w-xs flex-col gap-2" onSubmit={async event => {
     event.preventDefault();
     if (pending.current) return;
     const price = Number(rate);

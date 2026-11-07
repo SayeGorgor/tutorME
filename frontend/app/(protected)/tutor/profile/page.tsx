@@ -1,11 +1,9 @@
 'use client';
 
 import React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import { useCurrentUser } from "@/lib/context/UserContext";
 import { TutorProfile, UpdateTutorAvailabilitySchema, AvailabilityTimeRange } from "@/lib/types";
@@ -18,11 +16,11 @@ import {
     updateTutorAvailability
 } from "@/lib/api/actions/client-actions";
 
+import { subjectSummary } from "@/lib/subject-summary";
 import TutorLocationBadges from "@/components/TutorLocationBadges";
 import TutorRateEditor from "@/components/TutorRateEditor";
 import TutorLocationSettings from "@/components/TutorLocationSettings";
-import ChoiceArrowsIcon from "@/public/icons/choice_arrows_icon.svg";
-import CalendarIcon from "@/public/icons/calendar_icon.svg";
+import AvailabilityControls from "@/components/AvailabilityControls";
 import EditIcon from "@/public/icons/edit_icon.svg";
 import LoadingAnimationIcon from "@/public/icons/loading_animation_icon.svg";
 import { AVAILABILITY_TIMES, DAYS } from "@/constants/constants";
@@ -42,13 +40,11 @@ type toggleSquaresCustomInput = {
 type toggleSquaresInput = toggleSquaresCustomInput | toggleSquaresWeeklyInput
 
 export default function ProfilePage() {
-    const { user, loading } = useCurrentUser();
-    const router = useRouter();
+    const { user } = useCurrentUser();
 
     const times = AVAILABILITY_TIMES;
     const days = DAYS;
 
-    const dateInputRef = useRef<HTMLInputElement>(null);
 
     const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(null);
     const [isEditingIntro, setIsEditingIntro] = useState(false);
@@ -66,7 +62,6 @@ export default function ProfilePage() {
     const [availabilityTimeRanges, setAvailabilityTimeRanges] = useState<AvailabilityTimeRange[]>([]);
     const [originalAvailabilityTimeRanges, setOriginalAvailabilityTimeRanges] = useState<AvailabilityTimeRange[]>([]);
     const [availabilityType, setAvailabilityType] = useState<"weekly" | "custom">("weekly");
-    const [showAvailabilityTypeDropdown, setShowAvailabilityTypeDropdown] = useState(false);
     const [currentTimePage, setCurrentTimePage] = useState(0);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString());
 
@@ -457,7 +452,8 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="flex flex-1 flex-col gap-6 px-10 py-6 h-full w-full">
+        <div className="location-ui touch-controls flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6 lg:p-8 w-full [overflow-wrap:anywhere]">
+            {systemMessage && <p role="alert" className="text-red-700">{systemMessage}</p>}
             {isLoading ? (
                 <div className="h-full w-full flex justify-center items-center">
                     <LoadingAnimationIcon className="h-10 w-10" />
@@ -467,11 +463,11 @@ export default function ProfilePage() {
                     <TutorLocationSettings tutor={tutorProfile} onSaved={setTutorProfile} />
                     <div 
                         id="tutor-profile-card" 
-                        className="flex justify-between p-6 bg-blue-100 rounded-lg"
+                        className="flex min-w-0 flex-col justify-between gap-6 p-4 sm:p-6 bg-blue-100 rounded-lg xl:flex-row"
                     >
                         <div 
                             id="tutor-profile-card-left"
-                            className="flex gap-6"
+                            className="flex min-w-0 flex-col gap-4 sm:flex-row sm:gap-6"
                         >
                             <Image 
                                 id="pfp" 
@@ -479,11 +475,11 @@ export default function ProfilePage() {
                                 alt={`${tutorProfile.user.firstName} ${tutorProfile.user.lastName}'s Profile Picture`} 
                                 width={210} 
                                 height={210}
-                                className="bg-gray-500 rounded-lg"
+                                className="h-32 w-32 shrink-0 self-start bg-gray-500 rounded-lg object-cover sm:h-[210px] sm:w-[210px]"
                             />
                             <div
                                 id="tutor-info"
-                                className="flex flex-col gap-2"
+                                className="flex min-w-0 flex-1 flex-col gap-2"
                             >
                                 <div className="flex flex-col gap-1">
                                     <p className="font-bold text-3xl">{tutorProfile.user.firstName} {tutorProfile.user.lastName}</p>
@@ -491,9 +487,9 @@ export default function ProfilePage() {
                                     <TutorLocationBadges tutor={tutorProfile} />
                                 </div>
 
-                                <p className="text-lg font-bold">{tutorProfile.subjects.map(subject => subject.name).join(" / ") || "Subjects not listed yet"}</p>
+                                <p className="text-lg font-bold">{subjectSummary(tutorProfile.subjects)}</p>
 
-                                <div className="flex gap-2 items-center">
+                                <div className="flex flex-wrap gap-2 items-center">
                                     <div className="flex gap-1 items-center">
                                         <p className="text-sm">Tutor-provided profile information</p>
                                     </div>
@@ -504,14 +500,14 @@ export default function ProfilePage() {
                                 </div>
                                 
                                 {isEditingIntro ? (
-                                    <form className="flex gap-1" onSubmit={saveIntroChange}>
+                                    <form className="flex min-w-0 flex-col gap-3 sm:flex-row" onSubmit={saveIntroChange}>
                                         <textarea
                                             aria-label="Tutor introduction"
                                             maxLength={255}
                                             placeholder="Share what you teach, who you help, and your teaching style."
                                             value={introText}
                                             onChange={(e) => setIntroText(e.target.value)}
-                                            className="w-150 h-15 p-2 border rounded-lg bg-white"
+                                            className="w-full min-w-0 min-h-24 resize-y p-3 border rounded-lg bg-white"
                                         />
                                         <div className="flex flex-col items-start justify-center">
                                             <button 
@@ -533,10 +529,11 @@ export default function ProfilePage() {
                                         </div>
                                     </form>
                                 ) : (
-                                    <div className="w-fit relative">
+                                    <div className="flex min-w-0 items-start gap-2">
                                         <p className={`max-w-150 ${!tutorProfile.intro?.trim() ? "italic text-slate-500" : ""}`}>{tutorProfile.intro?.trim() ? tutorProfile.intro : "Introduce yourself in one or two sentences: share what you teach, who you help, and your teaching style."}</p>
                                         <button 
-                                            className="absolute top-[-14] right-[-24] rounded-full p-1 text-gray-600 hover:text-gray-800 cursor-pointer"
+                                            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full text-slate-600 hover:text-blue-700"
+                                            type="button" aria-label="Edit introduction"
                                             onClick={() => {
                                                 setIsEditingIntro(!isEditingIntro)
                                                 setIntroText(tutorProfile.intro);
@@ -555,8 +552,8 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div id="additional-info-section" className="flex gap-4mt-4">
-                        <div id="additional-info-section-left" className="flex flex-5 flex-col gap-5">
+                    <div id="additional-info-section" className="flex min-w-0 flex-col gap-6 2xl:flex-row">
+                        <div id="additional-info-section-left" className="flex min-w-0 flex-5 flex-col gap-5">
                             <div className="flex flex-col gap-1">
                                 <p className="text-xl font-bold">About {tutorProfile.user.firstName}</p>
                                 {isEditingAbout ? (
@@ -589,9 +586,9 @@ export default function ProfilePage() {
                                         </div>
                                     </form>
                                 ) : (
-                                    <div className="relative w-fit">
+                                    <div className="flex min-w-0 items-start gap-2">
                                         <p className={`max-w-150 whitespace-pre-line text-sm ${!tutorProfile.bio?.trim() ? "italic text-slate-500" : ""}`}>{tutorProfile.bio?.trim() ? tutorProfile.bio : "Write a longer overview of yourself and your experience. Share your education, tutoring background, subject expertise, teaching approach, and how you help students reach their goals."}</p>
-                                        <button type="button" aria-label="Edit about section" className="absolute top-[-14] right-[-24] rounded-full p-1 text-gray-600 hover:text-gray-800 cursor-pointer" onClick={() => {
+                                        <button type="button" aria-label="Edit about section" className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full text-slate-600 hover:text-blue-700" onClick={() => {
                                             setIsEditingAbout(true);
                                             setAboutText(tutorProfile.bio);
                                         }}>
@@ -615,8 +612,8 @@ export default function ProfilePage() {
                                 <p className="text-xl font-bold">Reviews</p>
                             </div>
                         </div>
-                        <div id="additional-info-section-right" className="flex flex-3 flex-col justify-center gap-1 ml-10">
-                            <div className="flex justify-between">
+                        <div id="additional-info-section-right" className="flex min-w-0 flex-3 2xl:min-w-[39rem] flex-col justify-center gap-3">
+                            <div className="flex flex-wrap justify-between gap-3">
                                 <h3 className="text-xl font-bold">Availability - <span className="text-lg">{currentTimePage > 3 ? 'PM' : 'AM'}</span></h3>
 
                                 {availabilityUpdateMessage ? (
@@ -647,76 +644,17 @@ export default function ProfilePage() {
                             </div>
 
                             
-                            <div className="grid grid-cols-8 gap-2">
-                                <div className="flex justify-center items-center gap-6 col-span-8">
-                                    <div className="relative flex items-center">
-                                        <button 
-                                            className="flex items-center cursor-pointer"
-                                            onClick={() => setShowAvailabilityTypeDropdown(!showAvailabilityTypeDropdown)}
-                                        >
-                                            <h4 className="text-lg font-semibold">
-                                                {availabilityType === "weekly" ? "Weekly" : "Custom"}
-                                            </h4>
-                                            <ChoiceArrowsIcon className="w-5 h-5" />
-                                        </button>
-
-                                        <div
-                                            id="availability-type-dropdown"
-                                            className={`absolute top-[-2.5] left-[-2.5] mt-2 w-40 bg-white border border-gray-700 rounded-lg shadow-lg z-10 ${showAvailabilityTypeDropdown ? 'block' : 'hidden'}`}
-                                        >
-                                            <div
-                                                className="px-4 py-2 cursor-pointer rounded-t-lg hover:bg-gray-200"
-                                                onClick={() => {
-                                                    setAvailabilityType("weekly");
-                                                    setShowAvailabilityTypeDropdown(false);
-                                                }}
-                                            >
-                                                Weekly
-                                            </div>
-                                            <div
-                                                className="px-4 py-2 cursor-pointer rounded-b-lg hover:bg-gray-200"
-                                                onClick={() => {
-                                                    setAvailabilityType("custom");
-                                                    setShowAvailabilityTypeDropdown(false);
-                                                }}
-                                            >
-                                                Custom
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {availabilityType === "custom" && (
-                                        <div className="flex gap-2">
-                                            <h3 className="text-lg items-center font-semibold">
-                                                {weekDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {weekDates[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, {weekDates[6].getFullYear()}
-                                            </h3>
-                                            <div>
-                                                <button 
-                                                    onClick={() => dateInputRef.current?.showPicker()}
-                                                    className="cursor-pointer"
-                                                    aria-label="Select date"
-                                                >
-                                                    <CalendarIcon className="w-6 h-6" />
-                                                </button>
-                                                <input
-                                                    ref={dateInputRef}
-                                                    type="date"
-                                                    value={selectedDate}
-                                                    onChange={(e) => setSelectedDate(e.target.value)}
-                                                    className="sr-only"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
+                            <AvailabilityControls type={availabilityType} onTypeChange={setAvailabilityType} selectedDate={selectedDate} onDateChange={setSelectedDate} timezone={user?.timezone} />
+                            <p id="availability-scroll-help" className="text-sm text-slate-600">Scroll the calendar horizontally on smaller screens. Select a time to toggle availability.</p>
+                            <div className="calendar-scroll" role="region" aria-label="Edit tutor availability calendar" aria-describedby="availability-scroll-help" tabIndex={0}>
+                            <div className="grid min-w-[34rem] grid-cols-8 gap-2">
                                 <button 
-                                    onClick={() => setCurrentTimePage(currentTimePage > 0 ? currentTimePage - 1 : 7)}
-                                    className="flex items-center justify-center font-semibold h-6 text-center cursor-pointer"
+                                    aria-label="Previous availability times" onClick={() => setCurrentTimePage(currentTimePage > 0 ? currentTimePage - 1 : 7)}
+                                    className="flex min-h-11 items-center justify-center font-semibold text-center cursor-pointer"
                                 >
                                     &lt;
                                 </button>
-                                <div className="overflow-hidden h-6 col-span-6">
+                                <div className="flex min-h-11 items-center overflow-hidden col-span-6">
                                     <div
                                         className="flex transition-transform duration-300 ease-in-out"
                                         style={{
@@ -728,7 +666,7 @@ export default function ProfilePage() {
                                                 {page.map((time, timeIndex) => (
                                                     <div
                                                         key={timeIndex}
-                                                        className="shrink-0 text-center font-semibold h-6"
+                                                        className="shrink-0 text-center font-semibold min-h-6"
                                                     >
                                                         {time}
                                                     </div>
@@ -738,8 +676,8 @@ export default function ProfilePage() {
                                     </div>
                                 </div> 
                                 <button 
-                                    onClick={() => setCurrentTimePage(currentTimePage < 7 ? currentTimePage + 1 : 0)}
-                                    className="flex items-center justify-center font-semibold h-6 text-center cursor-pointer"
+                                    aria-label="Next availability times" onClick={() => setCurrentTimePage(currentTimePage < 7 ? currentTimePage + 1 : 0)}
+                                    className="flex min-h-11 items-center justify-center font-semibold text-center cursor-pointer"
                                 >
                                     &gt;
                                 </button>
@@ -781,15 +719,18 @@ export default function ProfilePage() {
                                                     );
 
                                                 return (
-                                                    <div
+                                                    <button
                                                         key={calendarIndex}
-                                                        className={`h-10 cursor-pointer ${getAvailabilityCalendarCellSize(isActive, hasLeftNeighbor, hasRightNeighbor)}`}
+                                                        type="button"
+                                                        aria-pressed={isActive}
+                                                        aria-label={`${availabilityType === 'weekly' ? days[dayIndex] : ''} ${times[timeIndex / 30]}`}
+                                                        className={`min-h-11 min-w-11 cursor-pointer ${getAvailabilityCalendarCellSize(isActive, hasLeftNeighbor, hasRightNeighbor)}`}
                                                         onClick={() => toggleSquare({
                                                             timeIndex,
                                                             dayIndex,
                                                             type: 'weekly'
                                                         })}
-                                                    ></div>
+                                                    />
                                                 );
                                             })}
                                             <div className="h-10"></div>
@@ -836,21 +777,25 @@ export default function ProfilePage() {
                                                     );
 
                                                 return (
-                                                    <div
+                                                    <button
                                                         key={calendarIndex}
-                                                        className={`h-10 cursor-pointer ${getAvailabilityCalendarCellSize(isActive, hasLeftNeighbor, hasRightNeighbor)}`}
+                                                        type="button"
+                                                        aria-pressed={isActive}
+                                                        aria-label={`${date.toLocaleDateString()} ${times[timeIndex / 30]}`}
+                                                        className={`min-h-11 min-w-11 cursor-pointer ${getAvailabilityCalendarCellSize(isActive, hasLeftNeighbor, hasRightNeighbor)}`}
                                                         onClick={() => toggleSquare({
                                                             timeIndex,
                                                             date: formatToDateString(date),
                                                             type: 'custom'
                                                         })}
-                                                    ></div>
+                                                    />
                                                 );
                                             })}
                                             <div className="flex items-center justify-center font-semibold h-10 text-center">{date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })}</div>
                                         </React.Fragment>
                                     ))
                                 )}
+                            </div>
                             </div>
                         </div>
                     </div>

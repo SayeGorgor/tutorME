@@ -1,0 +1,29 @@
+{
+  "browser": "Chrome/156.0.8078.81",
+  "node": "v26.13.0",
+  "routes": [
+    "home",
+    "discovery",
+    "publicProfile",
+    "tutor-editor",
+    "studentDashboard",
+    "tutorDashboard",
+    "account",
+    "signup",
+    "verify",
+    "login",
+    "sessions",
+    "tutorSessions",
+    "booking",
+    "legal",
+    "terms",
+    "signupTutor",
+    "complete",
+    "tutorStudents",
+    "tutorPayments"
+  ],
+  "baseline": "fcf33ecf42ef34dafadf80248bfeb4c1a4a3588f",
+  "source": "working tree with current build",
+  "google": "mocked; not loaded",
+  "providers": "not contacted"
+}

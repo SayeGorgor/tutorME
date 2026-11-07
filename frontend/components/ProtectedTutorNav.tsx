@@ -31,8 +31,8 @@ export default function ProtectedTutorNav() {
     );
 
     return (
-        <nav aria-label="Account navigation" className="account-nav relative flex w-full shrink-0 flex-col gap-0 bg-slate-900 p-4 text-white sm:p-6 lg:sticky lg:top-0 lg:h-dvh lg:w-full lg:gap-6 lg:overflow-y-auto lg:items-start">
-            <Link href="/tutor/dashboard" aria-label="tutorME dashboard" id="logo" className="absolute top-4 text-[1.8rem] text-white font-sans sm:top-6 lg:static lg:ml-2">
+        <nav aria-label="Account navigation" className="account-nav relative flex w-full shrink-0 flex-row flex-wrap items-center gap-3 bg-slate-900 p-4 text-white sm:p-6 lg:sticky lg:top-0 lg:h-dvh lg:w-full lg:flex-col lg:gap-6 lg:overflow-y-auto lg:items-start">
+            <Link href="/tutor/dashboard" aria-label="tutorME dashboard" id="logo" className="self-start text-[1.8rem] text-white font-sans lg:ml-2">
                 <TutorMELogo inverse />
             </Link>
             <div className="hidden w-full lg:block">{links}</div>

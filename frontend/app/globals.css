@@ -63,12 +63,59 @@ input[type=range], input[type=radio], input[type=checkbox] { accent-color: #3265
   .google-location-widget gmp-place-autocomplete { color-scheme: dark; }
 }
 
-.legal-document { color: #233756; line-height: 1.8; }
+.legal-document { overflow-wrap: anywhere; color: #233756; line-height: 1.8; }
 .legal-document a { color: #234aa2; text-decoration: underline; text-underline-offset: 3px; }
 @media (prefers-color-scheme: dark) {
- .legal-document { color: #dce8fa; background: #17253c; }
+ .legal-document { overflow-wrap: anywhere; color: #dce8fa; background: #17253c; }
  .legal-document a, .legal-document .text-blue-700 { color: #abcaff; }
  .site-footer { color: #b3c3dc; background: #14243c; border-color: #34445f; }
 }
 
 .demo-badge { display: inline-block; border: 1px solid #d8c99b; border-radius: 999px; background: #fff8e5; color: #684f0b; padding: .25rem .65rem; font-size: .75rem; font-weight: 600; }
+
+/* Shared reflow rules: fix intrinsic sizing instead of hiding page overflow. */
+@layer base {
+:where(main, section, article, form, fieldset, label) { min-width: 0; }
+:where(h1, h2, h3, h4, p, li, dt, dd) { overflow-wrap: anywhere; }
+:where(input, select, textarea) { min-width: 0; max-width: 100%; }
+:where(img, svg) { max-width: 100%; }
+}
+.account-content { width: 100%; max-width: 100rem; margin-inline: auto; }
+.account-nav #logo { padding: 0; min-height: 2.75rem; display: flex; align-items: center; }
+.calendar-scroll { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; padding: .25rem .25rem .75rem; }
+.touch-controls :where(button, select, input:not([type=checkbox]):not([type=radio]):not([type=range])) { min-height: 2.75rem; }
+.touch-controls button { min-width: 2.75rem; }
+.touch-controls :where(input, select, textarea) { font-size: 1rem; }
+.touch-controls input[type=checkbox] { flex-shrink: 0; }
+.session-actions > button { flex: 1 1 10rem; }
+@media (min-width: 40rem) { .session-actions > button { flex: 0 1 auto; } }
+@media (prefers-color-scheme: dark) {
+ .location-ui [class~="bg-white/70"] { background: #233d63; }
+ .location-ui .bg-slate-50 { background: #22334d; }
+ .location-ui .text-gray-600, .location-ui .text-gray-500 { color: #b3c3dc; }
+ .location-ui .text-slate-900, .location-ui .text-gray-800 { color: #e4ecfa; }
+ .location-ui .text-green-800, .location-ui .text-green-700 { color: #86efac; }
+ .location-ui .text-red-500, .location-ui .text-red-600 { color: #ffb4b4; }
+ .location-ui input:not([type=checkbox]):not([type=radio]):not([type=range]),
+ .location-ui select, .location-ui textarea { background-color: #17253c; }
+ .location-ui #tutor-profile-card,
+ .location-ui #additional-info-section-left,
+ .location-ui #additional-info-section-right { background: #17253c; border-color: #34445f; color: #e4ecfa; }
+ .auth-surface { background: #17253c; color: #e4ecfa; border-color: #34445f; color-scheme: dark; }
+ .auth-surface input:not([type=checkbox]):not([type=radio]), .auth-surface select { background: #17253c; color: #e4ecfa; }
+ .auth-surface .text-gray-600, .auth-surface .text-slate-600 { color: #b3c3dc; }
+ .auth-surface .text-blue-700, .auth-surface .text-blue-800 { color: #a9c8ff; }
+ .auth-surface .bg-blue-700, .auth-surface .bg-blue-800 { color: white; }
+ .auth-surface .text-red-500, .auth-surface .text-red-700 { color: #ffb4b4; }
+}
+
+/* Let the logo and native disclosure wrap at large text sizes instead of overlap. */
+.mobile-menu { flex: 1 0 6rem; }
+.mobile-menu[open] { flex-basis: 100%; }
+.landing-nav > div:has(> .mobile-menu[open]) { flex-basis: 100%; }
+.touch-controls label:has(> input[type=checkbox]) { min-height: 2.75rem; }
+@media (prefers-color-scheme: dark) {
+ .location-ui .bg-blue-200 { background-color: #29456f; }
+ .auth-surface .bg-blue-50 { background-color: #233d63; }
+ .auth-surface .text-slate-500 { color: #b3c3dc; }
+}

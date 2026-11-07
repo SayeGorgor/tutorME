@@ -42,7 +42,7 @@ export default function SubjectsYouTeach({ tutor, onSaved }: { tutor: TutorProfi
     finally { pending.current = false; setBusy(false); }
   };
 
-  return <form id="subjects-you-teach" className="flex scroll-mt-6 flex-col gap-3 border-t border-slate-200 pt-5" onSubmit={async event => {
+  return <form id="subjects-you-teach" className="touch-controls flex min-w-0 scroll-mt-6 flex-col gap-3 border-t border-slate-200 pt-5" onSubmit={async event => {
     event.preventDefault();
     if (pending.current || !loaded) return;
     pending.current = true; setBusy(true); setMessage("");
@@ -56,8 +56,8 @@ export default function SubjectsYouTeach({ tutor, onSaved }: { tutor: TutorProfi
     <fieldset disabled={busy}>
       <legend className="mb-3 font-semibold">Subjects you teach</legend>
       <div className="grid max-h-60 grid-cols-1 gap-3 overflow-y-auto sm:grid-cols-2">
-        {[...subjects].sort((a, b) => a.name.localeCompare(b.name)).map(subject => <label key={subject.id} className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={selected.includes(subject.id)} disabled={!selected.includes(subject.id) && selected.length >= 50} onChange={event => {
+        {[...subjects].sort((a, b) => a.name.localeCompare(b.name)).map(subject => <label key={subject.id} className="flex min-h-11 min-w-0 items-start gap-2 py-2 text-sm [overflow-wrap:anywhere]">
+          <input className="mt-1 shrink-0" type="checkbox" checked={selected.includes(subject.id)} disabled={!selected.includes(subject.id) && selected.length >= 50} onChange={event => {
             setSelected(current => event.target.checked ? [...current, subject.id] : current.filter(id => id !== subject.id));
             setMessage("");
           }} />{subject.name}

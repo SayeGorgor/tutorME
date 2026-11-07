@@ -43,10 +43,8 @@ export default function LandingNav() {
   }, [subject, pathname, retry]);
   const currentAccount = account?.subject === subject ? account : null;
   const complete = currentAccount?.role;
-  const isStudent = !!subject && complete === "student";
   const logoHref = !subject ? "/" : complete === "student" ? "/student/dashboard" : complete === "tutor" ? "/tutor/dashboard" : currentAccount?.incomplete ? "/complete-registration" : "/account/settings";
   const sessions = complete === "tutor" ? "/tutor/sessions" : "/student/sessions";
-  const dashboardLink = isStudent ? <Link href="/student/dashboard" className="inline-flex rounded-xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800 hover:bg-blue-100">Back to dashboard</Link> : null;
   const linkClass = "rounded-lg px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-800";
   const links = isPending ? <span role="status" className="px-4 py-3 text-sm text-slate-500">Loading account...</span> : subject ? <>
     {complete ? <>
@@ -69,12 +67,12 @@ export default function LandingNav() {
     <Link href="/login" className="rounded-lg px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50">Log in</Link>
     <Link href="/signup" className="rounded-xl bg-blue-800 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-blue-900">Get started <span aria-hidden="true">?</span></Link>
   </>;
-  return <nav aria-label="Main navigation" className="relative z-30 flex w-full flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 bg-white px-5 py-4 sm:px-8 lg:px-12">
-    <Link href={logoHref} aria-label={subject ? "tutorME dashboard" : "tutorME home"} className="absolute top-4 flex h-11 items-center gap-2 text-2xl font-bold tracking-tighter text-slate-900 lg:static">
+  return <nav aria-label="Main navigation" className="landing-nav relative z-30 flex w-full flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 bg-white px-5 py-4 sm:px-8 lg:px-12">
+    <Link href={logoHref} aria-label={subject ? "tutorME dashboard" : "tutorME home"} className="flex min-h-11 items-center gap-2 text-2xl font-bold tracking-tighter text-slate-900 lg:static">
       <TutorMELogo />
     </Link>
-    <div className="hidden items-center gap-1 lg:flex">{dashboardLink}{links}</div>
-    <div className="w-full lg:hidden"><MobileMenu>{links}</MobileMenu>{dashboardLink && <div className="mt-3">{dashboardLink}</div>}</div>
+    <div className="hidden items-center gap-1 lg:flex">{links}</div>
+    <div className="min-w-0 grow basis-24 lg:hidden"><MobileMenu>{links}</MobileMenu></div>
     {subject && currentAccount?.error && <p role="status" className="w-full text-sm text-slate-600">Account links could not load. <button type="button" className="font-semibold text-blue-700 underline" onClick={() => setRetry(value => value + 1)}>Retry</button> or <Link href="/login" className="font-semibold text-blue-700 underline">sign in again</Link>.</p>}
     {message && <p role="alert" className="w-full text-sm text-red-600">{message}</p>}
   </nav>;
