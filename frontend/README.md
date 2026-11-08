@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# tutorME
 
-## Getting Started
+**Find the right tutor, online or nearby.**
 
-First, run the development server:
+[**Live demo**](https://tutorme2.vercel.app/) · [**Source code**](https://github.com/SayeGorgor/tutorME)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+tutorME is a full-stack tutoring marketplace that helps students discover tutors and coordinate sessions. It brings together subject- and location-based discovery, tutor profiles, availability management, and protected student/tutor workflows in one application.
+
+## Core Features
+
+- **Tutor discovery:** search by subject and location, with options for online and in-person sessions.
+- **Detailed tutor profiles:** review tutoring information, subjects, rates, and available session options.
+- **Student and tutor accounts:** distinct, authenticated workspaces with role-aware access.
+- **Flexible availability:** recurring weekly hours alongside date-specific availability and exceptions.
+- **Booking workflows:** requests and confirmation logic that account for scheduling conflicts across online and in-person sessions.
+- **Persistent scheduling:** availability and booking data stored through a Python API backed by PostgreSQL.
+- **Responsive experience:** interfaces designed for desktop and mobile browsing.
+
+> **Development status:** tutorME is an actively developed marketplace. Some booking and legal/compliance-related features are configuration-gated; a live deployment or visible interface does not by itself indicate that all bookings are enabled for public use.
+
+## Tech Stack
+
+| Layer | Technologies |
+| --- | --- |
+| Frontend | Next.js 16, React, TypeScript, Tailwind CSS 4 |
+| Backend | Python, FastAPI, Pydantic |
+| Database | PostgreSQL (Neon), SQLAlchemy, Alembic |
+| Authentication | Neon Auth, authenticated API requests |
+| Deployment | Vercel (frontend), Railway (backend) |
+
+## How It Works
+
+1. **Discover:** a student searches for a subject, location, and session format.
+2. **Compare:** the student reviews tutor profiles and availability.
+3. **Coordinate:** an authenticated booking workflow submits or manages a requested time.
+4. **Prevent conflicts:** backend rules and database-backed checks help prevent overlapping confirmed sessions.
+
+## Engineering Highlights
+
+**Separated frontend and backend.** The React/Next.js UI communicates with a dedicated FastAPI service. This keeps presentation, request validation, scheduling rules, and data access organized into distinct layers.
+
+**Real-world scheduling constraints.** The availability model supports repeated weekly windows and date-specific time ranges. Booking logic includes conflict handling that considers a tutor's calendar across both online and in-person sessions.
+
+**Authentication and authorization.** Neon Auth provides identity, while backend endpoints enforce application-specific access to student and tutor resources.
+
+**Database migrations and tests.** SQLAlchemy manages persistent models and Alembic manages schema migrations. The repository includes backend tests, including explicitly opted-in PostgreSQL concurrency tests for booking conflicts; those tests require an approved disposable test database.
+
+## Repository Structure
+
+```text
+tutorME/
+├── frontend/           # Next.js client, pages and UI components
+├── backend/
+│   ├── app/            # FastAPI routes, models, schemas and services
+│   ├── tests/          # Backend tests
+│   ├── alembic.ini     # Migration configuration
+│   └── requirements.txt
+└── docs/               # Project documentation
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Run Locally
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Requirements:** Node.js/npm, Python, and access to a development PostgreSQL/Neon environment with the corresponding authentication settings.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Clone the repository:
 
-## Learn More
+```bash
+git clone https://github.com/SayeGorgor/tutorME.git
+cd tutorME
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 1. Start the backend
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The following commands are for Windows PowerShell:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```powershell
+cd backend
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
 
-## Deploy on Vercel
+Create a `backend/.env` file containing **your own development configuration**. The required backend settings are defined in [`backend/app/core/config.py`](../backend/app/core/config.py), including the database connection, Neon authentication URLs, and location-service configuration. Never commit real credentials.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Apply reviewed migrations **only to an intended development database**:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```powershell
+alembic upgrade head
+uvicorn app.main:app --reload
+```
+
+The API runs at [http://localhost:8000](http://localhost:8000) by default; FastAPI's interactive documentation is available at `/docs` when enabled.
+
+### 2. Start the frontend
+
+In a second terminal, from the repository root:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+Configure the frontend's development API/auth endpoints to match your backend and Neon environment. Then visit [http://localhost:3000](http://localhost:3000).
+
+### 3. Check the frontend
+
+```bash
+npm run lint
+npm run build
+```
+
+Backend test setup depends on the test module and environment. **Do not enable the live PostgreSQL tests against a production or shared database.** See the safeguards and environment checks in [`backend/tests/`](../backend/tests/).
+
+## Status and Scope
+
+This project is under active development. Features exposed in the UI, behind feature flags, or in the source code may have different production readiness; consult current deployment configuration before using it for real tutoring arrangements.
+
+**Built by [Saye Gorgor](https://github.com/SayeGorgor).**
+
+
+## Technical documentation
+
+See [engineering documentation](../docs/README.md) for architecture, migrations, scheduling/concurrency, authorization, location, deployment and testing boundaries.

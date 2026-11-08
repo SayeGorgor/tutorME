@@ -1,5 +1,7 @@
 # Booking subject and immutable quote snapshots
 
+> Historical implementation/operational record. Environment identifiers and workstation paths use illustrative placeholders; commands are not ready-to-run approvals. This snapshot cannot establish current hosted settings or vulnerability status. Current guidance: [engineering index](README.md), [deployment](deployment.md), [authentication](authentication-and-authorization.md) and [testing](testing.md). Engineering detail is retained for review.
+
 November 6, 2026
 
 Implemented in source only. No live database connection, migration, account mutation, seed, booking operation or feature-flag edit ran. `BOOKINGS_ENABLED` still defaults to false and environment files were not changed. The three live PostgreSQL scenarios and manual end-to-end test described in the request are operator-reported historical results, not results rerun for this change.
@@ -96,10 +98,10 @@ New linear revision: **e47b901ad682 → f83d2a19b506**. Adds six nullable column
 
 Apply schema before restarting the updated backend and paired frontend. New booking clients must send the two required fields; historical responses are additive/nullable. Stop dev writers during the migration and review backup/restore capability. Older, unversioned or unexpected revisions require separate review; do not stamp or replay historical SQL.
 
-The intended target is project `still-math-23486169`, branch `br-odd-cake-axy2uqro`, database `neondb`. This is context, not authorization. After approval, use a temporary PowerShell session and privately supply the reviewed **direct TLS psycopg URL**:
+The intended target is project `<project-id>`, branch `<development-branch-id>`, database `neondb`. This is context, not authorization. After approval, use a temporary PowerShell session and privately supply the reviewed **direct TLS psycopg URL**:
 
 ```powershell
-Set-Location 'C:/Users/Pokef/Projects/tutorME/backend'
+Set-Location '<repository-root>/backend'
 $taskSecureUrl = Read-Host 'Approved dev direct psycopg URL with TLS' -AsSecureString
 $env:DATABASE_URL = [System.Net.NetworkCredential]::new('', $taskSecureUrl).Password
 $env:PGOPTIONS = '-c lock_timeout=5s -c statement_timeout=60s'

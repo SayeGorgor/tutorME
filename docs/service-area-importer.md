@@ -1,5 +1,7 @@
 # Census service-area importer
 
+> Historical implementation/operational record. Environment identifiers and workstation paths use illustrative placeholders; commands are not ready-to-run approvals. This snapshot cannot establish current hosted settings or vulnerability status. Current guidance: [engineering index](README.md), [deployment](deployment.md), [authentication](authentication-and-authorization.md) and [testing](testing.md). Engineering detail is retained for review.
+
 November 6, 2026
 
 The old importer issued one primary-key lookup per row, potentially flushed pending ORM inserts during lookups, and committed the entire file only at the end. Network round trips to Neon dominated the work; other transactions could not see uncommitted progress.
@@ -30,31 +32,31 @@ Before running, stop any older importer still processing this file. An old proce
 
 ## Commands for the intended development target — not executed here
 
-The requested target is project `still-math-23486169`, branch `br-odd-cake-axy2uqro`, database `neondb`. Confirm this target is the intended environment and that the existing backend configuration points there. Do not print the connection URL. Review the official dataset vintage/headers/checksums first; the file paths below are examples and must match your extracted files.
+The requested target is project `<project-id>`, branch `<development-branch-id>`, database `neondb`. Confirm this target is the intended environment and that the existing backend configuration points there. Do not print the connection URL. Review the official dataset vintage/headers/checksums first; the file paths below are examples and must match your extracted files.
 
 Run from the repository root in PowerShell:
 
 ```powershell
-Set-Location 'C:/Users/Pokef/Projects/tutorME/backend'
+Set-Location '<repository-root>/backend'
 
 .venv/Scripts/python.exe -m scripts.import_service_areas `
   'C:/data/2025_Gaz_place_national.txt' --kind place --year 2025 `
   --batch-size 1000 `
-  --expected-project-id still-math-23486169 `
-  --expected-branch-id br-odd-cake-axy2uqro `
+  --expected-project-id <project-id> `
+  --expected-branch-id <development-branch-id> `
   --expected-database neondb
 if ($LASTEXITCODE -ne 0) { throw 'Places import stopped; review progress before continuing.' }
 
 .venv/Scripts/python.exe -m scripts.import_service_areas `
   'C:/data/2025_Gaz_zcta_national.txt' --kind zcta --year 2025 `
   --batch-size 1000 `
-  --expected-project-id still-math-23486169 `
-  --expected-branch-id br-odd-cake-axy2uqro `
+  --expected-project-id <project-id> `
+  --expected-branch-id <development-branch-id> `
   --expected-database neondb
 if ($LASTEXITCODE -ne 0) { throw 'ZCTA import stopped; review progress before continuing.' }
 ```
 
-The importer reads `DATABASE_URL` from the backend settings; process overrides take precedence over `.env`. Avoid displaying either. No new environment variables, schema changes or feature-flag changes are required. Dataset source links and provenance preparation are in [development readiness](development-auth-readiness.md).
+The importer reads `DATABASE_URL` from the backend settings; process overrides take precedence over `.env`. Avoid displaying either. No new environment variables, schema changes or feature-flag changes are required. Dataset source links and provenance preparation are in [location integration](location.md) and the [deployment guide](deployment.md).
 
 On startup expect `Import started`, followed by `Target verified` with exactly the three supplied IDs. Every batch prints `Batch committed` with batch/read/inserted/skipped/elapsed totals. Stop and investigate any mismatch/failure. A completely repeated import should report zero newly inserted rows and skip every valid record, while still checking coordinates and target identity.
 

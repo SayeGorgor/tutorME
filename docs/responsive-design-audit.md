@@ -1,8 +1,10 @@
 # TutorME responsive design audit and improvements
 
+> Historical implementation record. Current technical guidance: [Testing and responsive design](testing.md). Original detail is retained for review; dated test results are not new verification.
+
 November 6, 2026
 
-Implemented frontend layout/accessibility improvements while retaining the blue identity, existing routes, authorization, APIs, booking snapshots and scheduling calculations. No backend, environment, credentials, database, provider settings or feature flags were changed. No commit, merge, push or deployment was performed. The pre-existing production-readiness report was preserved.
+Implemented frontend layout/accessibility improvements while retaining the blue identity, existing routes, authorization, APIs, booking snapshots and scheduling calculations. No backend, environment, credentials, database, provider settings or feature flags were changed. No commit, merge, push or deployment was performed. The earlier production-readiness snapshot is preserved in the private review archive; current release guidance is in [deployment](deployment.md).
 
 ## Audit scope and initial findings
 
@@ -117,11 +119,8 @@ During validation, the harness's landing CSS-module mapping was corrected and af
 - [Original editor overflow measurement](responsive-artifacts/before-results.json).
 - [Before editor, 390px](responsive-artifacts/before-tutor-editor-light-390.png).
 - [After editor, 390px](responsive-artifacts/after-tutor-editor-light-390.png).
-- [Dark calendar, 390px](responsive-artifacts/after-calendar-dark-390.png).
-- [Light discovery, 390px](responsive-artifacts/after-discovery-light-390.png).
-- [Dark booking review, 390px](responsive-artifacts/after-booking-dark-390.png).
 
-Additional light/dark screenshots are in responsive-artifacts. They contain only synthetic identities/data. The source audit visually reviewed representative editor, calendar and booking screenshots as well as numerical measurements.
+The retained editor comparison and three JSON files provide public representative evidence. Additional synthetic calendar, discovery and booking screenshots have been preserved in the private review archive and retired from the current tree; their numerical coverage remains in the measurement JSON. The source audit visually reviewed representative editor, calendar and booking screenshots as well as numerical measurements.
 
 From frontend, after building with reviewed synthetic settings:
 
