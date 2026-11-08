@@ -28,7 +28,9 @@ logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
 
-jwks_client = PyJWKClient(NEON_AUTH_JWKS_URL)
+# Keep the bounded JWKS cache, including rotation refresh cooldown. Do not cache
+# individual keys indefinitely or use stale keys after the set expires.
+jwks_client = PyJWKClient(NEON_AUTH_JWKS_URL, timeout=5, lifespan=300, cache_keys=False)
 
 def get_identity(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
@@ -36,6 +38,10 @@ def get_identity(credentials: HTTPAuthorizationCredentials = Depends(security)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
     try:
+        # Reject unsupported algorithms before any remote key lookup. This header
+        # is untrusted; the allowlist below remains fixed during verification.
+        if jwt.get_unverified_header(token).get("alg") != "EdDSA":
+            raise jwt.InvalidAlgorithmError("Unsupported signing algorithm")
         signing_key = jwks_client.get_signing_key_from_jwt(token)
 
         payload = jwt.decode(
@@ -44,6 +50,7 @@ def get_identity(credentials: HTTPAuthorizationCredentials = Depends(security)):
             algorithms=["EdDSA"],
             issuer=NEON_AUTH_ISSUER_AUDIENCE,
             audience=NEON_AUTH_ISSUER_AUDIENCE,
+            options={"require": ["exp", "iss", "aud", "sub"]},
             leeway=10
         )
     
@@ -54,7 +61,7 @@ def get_identity(credentials: HTTPAuthorizationCredentials = Depends(security)):
             detail="Token has expired"
         )
     
-    except (jwt.InvalidTokenError, jwt.PyJWKClientError):
+    except (jwt.InvalidTokenError, jwt.PyJWKClientError, jwt.PyJWKError, ValueError, TypeError):
         logger.info("Authentication token rejected")
         raise HTTPException(
             status_code=401,

@@ -1,0 +1,144 @@
+name: tutorME CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+        shell: bash
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      NEON_AUTH_BASE_URL: https://auth.example.test
+      NEON_AUTH_COOKIE_SECRET: synthetic-ci-cookie-secret-at-least-32-characters
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: '26'
+          package-manager-cache: false
+      - name: Clean dependency installation
+        run: npm ci --no-audit --no-fund
+      - name: Node tests
+        run: node --experimental-strip-types --test tests/*.mjs
+      - name: TypeScript
+        run: npx --no-install tsc --noEmit
+      - name: ESLint
+        run: npm run lint
+      - name: Diagnose Google Fonts connectivity
+        run: |
+          node -e "const https=require('https');const req=https.get('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap',r=>{console.log('Font CSS status:',r.statusCode);r.resume()});req.on('error',e=>console.log('Font CSS error:',e.code));req.setTimeout(10000,()=>req.destroy())"
+      - name: Production build with real fonts
+        run: npm run build
+      - name: Job evidence
+        if: always()
+        run: echo 'Frontend checks are recorded in the individual steps; only a successful production build verifies build completion. No hosted auth tested.' >> "$GITHUB_STEP_SUMMARY"
+
+  backend:
+    name: Backend isolated checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+        shell: bash
+    env:
+      DATABASE_URL: sqlite://
+      CSC_LOCATION_API_KEY: synthetic
+      CSC_API_URL: https://example.test
+      NEON_AUTH_BASE_URL: https://auth.example.test
+      NEON_AUTH_JWKS_URL: https://auth.example.test/jwks
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.14'
+      - name: Install pinned dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Dependency consistency
+        run: python -m pip check
+      - name: Complete isolated suite including JWT and authorization regressions
+        run: python -m scripts.run_isolated_tests
+      - name: Python source compilation
+        run: python -m compileall -q app scripts tests integration alembic
+      - name: Offline Alembic chain
+        env:
+          DATABASE_URL: postgresql+psycopg://synthetic:synthetic@invalid.example/disposable
+        run: |
+          python -m alembic heads
+          python -m alembic upgrade head --sql > "$RUNNER_TEMP/tutorme-migrations.sql"
+          test -s "$RUNNER_TEMP/tutorme-migrations.sql"
+      - name: Job evidence
+        if: always()
+        run: echo 'Isolated test output lists all results and the three intentional Neon race skips. Offline SQL generation does not prove PostgreSQL execution; see the separate integration job.' >> "$GITHUB_STEP_SUMMARY"
+
+  postgres:
+    name: PostgreSQL migrated integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17.6-bookworm
+        env:
+          POSTGRES_USER: tutorme_ci
+          POSTGRES_PASSWORD: synthetic-container-only
+          POSTGRES_DB: tutorme_ci
+        ports:
+          - 5432/tcp
+        options: >-
+          --health-cmd "pg_isready -U tutorme_ci -d tutorme_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+        shell: bash
+    env:
+      TUTORME_CONTAINER_TESTS: '1'
+      DATABASE_URL: sqlite://
+      CSC_LOCATION_API_KEY: synthetic
+      CSC_API_URL: https://example.test
+      NEON_AUTH_BASE_URL: https://auth.example.test
+      NEON_AUTH_JWKS_URL: https://auth.example.test/jwks
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: '3.14'
+      - name: Install pinned dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Mark only the fresh job-owned container database
+        env:
+          SERVICE_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          [[ "$GITHUB_RUN_ID" =~ ^[0-9]+$ && "$GITHUB_RUN_ATTEMPT" =~ ^[0-9]+$ ]]
+          docker exec "$SERVICE_CONTAINER" psql -U tutorme_ci -d tutorme_ci -v ON_ERROR_STOP=1 -c "COMMENT ON DATABASE tutorme_ci IS 'tutorme-ci:${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}'"
+      - name: Real migrations, schema comparison, PostgreSQL authorization and races
+        env:
+          TUTORME_CONTAINER_PORT: ${{ job.services.postgres.ports['5432'] }}
+        run: python -m integration.run_container
+      - name: Job evidence
+        if: always()
+        run: echo 'PostgreSQL integration is verified only if the migration step and all five tests pass without skips. The GitHub-owned service has no mounted volumes and is removed with the job. Neon/hosted auth are not tested.' >> "$GITHUB_STEP_SUMMARY"

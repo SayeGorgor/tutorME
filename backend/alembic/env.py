@@ -1,4 +1,5 @@
 from logging.config import fileConfig
+import os
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -66,6 +67,18 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    # A supplied connection is supported only for the explicit disposable CI
+    # path. Recheck its URL and server identity here, before any migration SQL.
+    # Ordinary application CLI behavior (no supplied connection) is unchanged.
+    supplied_connection = config.attributes.get("connection")
+    if supplied_connection is not None:
+        from scripts.container_guard import verify_migration_connection
+        verify_migration_connection(supplied_connection, os.environ)
+        context.configure(connection=supplied_connection, target_metadata=target_metadata)
+        with context.begin_transaction():
+            context.run_migrations()
+        return
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
