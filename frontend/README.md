@@ -58,60 +58,6 @@ tutorME/
 └── docs/               # Project documentation
 ```
 
-## Run Locally
-
-**Requirements:** Node.js/npm, Python, and access to a development PostgreSQL/Neon environment with the corresponding authentication settings.
-
-Clone the repository:
-
-```bash
-git clone https://github.com/SayeGorgor/tutorME.git
-cd tutorME
-```
-
-### 1. Start the backend
-
-The following commands are for Windows PowerShell:
-
-```powershell
-cd backend
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-```
-
-Create a `backend/.env` file containing **your own development configuration**. The required backend settings are defined in [`backend/app/core/config.py`](../backend/app/core/config.py), including the database connection, Neon authentication URLs, and location-service configuration. Never commit real credentials.
-
-Apply reviewed migrations **only to an intended development database**:
-
-```powershell
-alembic upgrade head
-uvicorn app.main:app --reload
-```
-
-The API runs at [http://localhost:8000](http://localhost:8000) by default; FastAPI's interactive documentation is available at `/docs` when enabled.
-
-### 2. Start the frontend
-
-In a second terminal, from the repository root:
-
-```powershell
-cd frontend
-npm ci
-npm run dev
-```
-
-Configure the frontend's development API/auth endpoints to match your backend and Neon environment. Then visit [http://localhost:3000](http://localhost:3000).
-
-### 3. Check the frontend
-
-```bash
-npm run lint
-npm run build
-```
-
-Backend test setup depends on the test module and environment. **Do not enable the live PostgreSQL tests against a production or shared database.** See the safeguards and environment checks in [`backend/tests/`](../backend/tests/).
-
 ## Status and Scope
 
 This project is under active development. Features exposed in the UI, behind feature flags, or in the source code may have different production readiness; consult current deployment configuration before using it for real tutoring arrangements.
