@@ -14,6 +14,12 @@ Frontend/API deploy independently; the overview describes Vercel/Railway. Verify
 
 Review explicit API CORS origins in [main.py](../backend/app/main.py) for each deployment; CORS does not authorize resources. Rebuild frontend public-variable changes and restart API server-setting changes.
 
+## Environment isolation
+
+A Preview deployment is not proof of an isolated backend, Auth provider or database. Independently verify its API destination, provider branch, credentials and data access before any state-changing acceptance. Production/Preview isolation and provider-side build/install overrides or hooks have not been established by this documentation. The absence of deployment commands in CI does not prevent connected hosting providers from deploying on pushes or pull requests; verify those policies before publication.
+
+Backend JWT verification requires `exp`, `iss`, `aud` and `sub`, fixed EdDSA, and issuer/audience equal to the configured Auth base URL origin. Confirm matching frontend/backend Auth and JWKS configuration, trusted origins, OAuth/email callbacks, HTTPS cookies, reliable clocks and outbound JWKS access. Never put server secrets in public frontend variables.
+
 ## Schema and release order
 
 1. Privately confirm target identity, environment purpose, access scope, retention and backups. An ID alone does not prove disposability.

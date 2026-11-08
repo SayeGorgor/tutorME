@@ -4,7 +4,7 @@ Neon Auth manages sign-in identity, verification and sessions. The Next.js [auth
 
 ## Identity and registration
 
-Verification fixes EdDSA, validates configured issuer/audience and rejects empty subjects. [Registration](../backend/app/services/registration.py) derives email/name from signed identity and requires strictly boolean true email verification, rejecting absent/conflicting/string flags. Legacy client identity/email mismatches reject. Explicit current adult/Terms acknowledgments record actual completion time; a provider account alone is not consent.
+Verification fixes EdDSA, requires expiration, issuer, audience and subject claims, validates the configured issuer/audience and rejects empty subjects. [Registration](../backend/app/services/registration.py) derives email/name from signed identity and requires strictly boolean true email verification, rejecting absent/conflicting/string flags. Legacy client identity/email mismatches reject. Explicit current adult/Terms acknowledgments record actual completion time; a provider account alone is not consent.
 
 Hosted signup and application creation are separate operations. Auth-only users can sign in and finish setup without another signup. Retry returns only the matching authenticated record and preserves existing role/name/email/acknowledgments. Database failures do not delete provider identities; the legacy creation endpoint shares the completion service.
 
@@ -24,4 +24,12 @@ Tutor profile/location/availability edits require the current tutor owner. Eligi
 
 ## Validation boundary
 
-Expiration is required and verified, along with issuer, audience and a nonempty string subject. EdDSA is fixed; optional issued-at/not-before claims are validated with ten seconds of clock skew. JWKS fetches have a five-second timeout and a bounded cache, with failures rejecting authentication. See the [November 8 hardening report](auth-hardening-2026-11-08.md) for evidence, limitations and rollout checks. This guide does not assert production configuration or successful live testing. Provider acceptance can create sessions/send mail; use approved controlled accounts. See [deployment](deployment.md) and [testing](testing.md).
+Expiration is required and verified, along with issuer, audience and a nonempty string subject. EdDSA is fixed; optional issued-at/not-before claims are validated with ten seconds of clock skew. JWKS fetches have a five-second timeout and a bounded cache, with failures rejecting authentication. This guide does not assert production configuration or successful live testing. Provider acceptance can create sessions/send mail; use approved controlled accounts. See [deployment](deployment.md) and [testing](testing.md).
+
+## Token lifetime and provider acceptance
+
+The frontend obtains a Neon JWT through the installed SDK token flow and sends it as a bearer token. Opaque session cookies, direct Google tokens and client-supplied role claims do not grant API access. The configured Auth base URL origin is both the expected issuer and audience; the JWKS endpoint must belong to the same intended provider branch.
+
+Verification is offline: logout, password reset or provider revocation does not immediately invalidate an already issued JWT. It can remain usable until its expiration plus ten seconds of skew. The JWKS set cache lasts five minutes, with no indefinite individual-key cache. A fresh cached known key can work during an outage; absent/expired cache fails closed. Unknown-key refresh has the library's thirty-second cooldown, which can briefly reject a newly rotated key. The five-second fetch timeout is not a total budget for all authentication work.
+
+Before release, record controlled staging evidence for email signup/verification/password reset, Google OAuth through Neon, both onboarding roles and interrupted retries, token expiration/refresh, browser persistence/logout, cross-account rejection, private booking visibility and signing-key rotation/outage recovery. Inspect required claims locally without recording tokens. Synthetic JWT and ownership tests do not establish hosted provider configuration; see [testing and release gates](testing.md#security-and-release-evidence).

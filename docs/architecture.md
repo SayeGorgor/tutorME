@@ -21,4 +21,4 @@ The [route registry](../backend/app/routes/api.py) groups users, tutors, booking
 
 Appointment quotes are fixed one-hour USD amounts for direct participant arrangements. There is no payment collection, booking-email service, automatic meeting provider, calendar sync or atomic rescheduling. Pending requests do not reserve slots. Visible UI/source defaults do not establish live deployment readiness.
 
-[Frontend setup](../frontend/README.md), [database](database.md), [authorization](authentication-and-authorization.md), [deployment](deployment.md) and [testing](testing.md) describe guarantees and their practical limits.
+[Local setup](../README.md#running-locally), [database](database.md), [authorization](authentication-and-authorization.md), [deployment](deployment.md) and [testing](testing.md) describe guarantees and their practical limits.
