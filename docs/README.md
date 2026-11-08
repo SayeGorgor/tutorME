@@ -96,30 +96,6 @@ tutorME/
 └── docs/                  # Architecture, security, scheduling, and test guides
 ```
 
-## Running locally
-
-**Prerequisites:** Node.js and npm, a compatible Python environment, PostgreSQL, and development-only credentials for the external services you choose to enable.
-
-**Frontend**
-
-```bash
-cd frontend
-npm ci
-npm run dev
-```
-
-**Backend** (from a separate terminal, after creating and activating a Python virtual environment)
-
-```bash
-cd backend
-python -m pip install -r requirements.txt
-python -m uvicorn app.main:app --reload
-```
-
-The applications require environment-specific configuration. Consult [deployment and environment configuration](docs/deployment.md) for variable names and service boundaries. Keep credentials in ignored local environment files or a secret manager; do not commit them. Configure database access and review Alembic migrations independently before enabling state-changing workflows. Never use a production database for local or automated tests.
-
-For frontend checks, `npm run lint` and `npm run build` are available. Backend and integration test requirements are described in [the testing guide](docs/testing.md).
-
 ## Current scope and limitations
 
 - Real bookings are subject to feature and policy gates; the presence of booking UI does not guarantee public booking is enabled.
