@@ -3,10 +3,10 @@ import { useCurrentUser } from "@/lib/context/UserContext";
 import BookingList from "@/components/BookingList";
 import Link from "next/link";
 export default function Dashboard() {
-  const {user,loading}=useCurrentUser();
-  if(loading)return <p className="p-6">Loading dashboard...</p>;
+  const {user}=useCurrentUser();
+  if (!user) return null;
   return <div className="flex w-full min-w-0 flex-col gap-8 p-5 sm:p-8 lg:p-10">
-    <header><h1 className="text-3xl font-semibold">Welcome, {user?.firstName}</h1><p className="mt-2 text-slate-600">Manage your requests and genuine tutoring appointments.</p></header>
+    <header><h1 className="text-3xl font-semibold">Welcome, {user.firstName}</h1><p className="mt-2 text-slate-600">Manage your requests and genuine tutoring appointments.</p></header>
     <section aria-labelledby="explore-tutors-heading" className="flex flex-col items-start gap-6 rounded-2xl border border-blue-200 bg-linear-to-br from-blue-100 via-blue-50 to-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-8">
       <div className="max-w-lg">
         <p className="mb-2 text-xs font-bold tracking-widest text-blue-700">YOUR NEXT STEP</p>

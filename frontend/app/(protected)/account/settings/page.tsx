@@ -1,2 +1,3 @@
 import AccountSettings from "@/components/AccountSettings";
-export default function Page() { return <AccountSettings />; }
+import AccountBoundary from "@/components/AccountBoundary";
+export default function Page() { return <AccountBoundary><AccountSettings /></AccountBoundary>; }

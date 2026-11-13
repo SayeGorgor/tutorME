@@ -1,4 +1,5 @@
 import ProtectedTutorNav from "@/components/ProtectedTutorNav";
+import AccountBoundary from "@/components/AccountBoundary";
 
 export default function TutorLayout({ 
     children 
@@ -11,7 +12,7 @@ export default function TutorLayout({
                 <ProtectedTutorNav />
             </div>
             <main className="account-content flex min-w-0 flex-1">
-                {children}
+                <AccountBoundary>{children}</AccountBoundary>
             </main>
         </div>
     )
