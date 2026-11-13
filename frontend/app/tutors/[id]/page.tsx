@@ -83,14 +83,13 @@ export default function TutorProfilePage({
                 <p role="status">Loading...</p>
             ) : tutorProfile ? (
                 <>
-                    {tutorProfile.isDemo && <p className="demo-badge self-start">Demo Profile - fictional tutor, not available for genuine appointments</p>}
                     <div 
                         id="tutor-profile-card" 
                         className="flex min-w-0 flex-col justify-between gap-6 rounded-lg bg-blue-100 p-4 text-black sm:p-6 xl:flex-row"
                     >
                         <div 
                             id="tutor-profile-card-left"
-                            className="flex min-w-0 flex-col gap-4 sm:flex-row sm:gap-6"
+                            className="flex min-w-0 flex-1 flex-col gap-4 sm:flex-row sm:gap-6"
                         >
                             <Image 
                                 id="pfp" 
@@ -98,14 +97,17 @@ export default function TutorProfilePage({
                                 alt={`${tutorProfile.user.firstName} ${tutorProfile.user.lastName}'s Profile Picture`} 
                                 width={210} 
                                 height={210}
-                                className="h-32 w-32 shrink-0 self-start rounded-lg bg-gray-500 object-cover sm:h-[210px] sm:w-[210px]"
+                                className="h-32 w-32 max-w-none shrink-0 self-start rounded-lg bg-gray-500 object-cover sm:h-[210px] sm:w-[210px]"
                             />
                             <div
                                 id="tutor-info"
                                 className="flex min-w-0 flex-col gap-2"
                             >
                                 <div className="flex flex-col gap-1">
-                                    <p className="font-bold text-3xl">{tutorProfile.user.firstName} {tutorProfile.user.lastName}</p>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <p className="font-bold text-3xl">{tutorProfile.user.firstName} {tutorProfile.user.lastName}</p>
+                                        {tutorProfile.isDemo && <span className="demo-badge shrink-0" title="Fictional tutor, not available for genuine appointments">Demo Profile</span>}
+                                    </div>
                                     <TutorLocationBadges tutor={tutorProfile} />
 
                                 </div>
