@@ -9,6 +9,7 @@ from app.models.user import UserRole
 from app.schemas.review import ReviewResponse
 from app.schemas.summaries import UserSummary
 
+
 class EligibilityAcceptance(APIModel):
     adult_confirmed: StrictBool
     terms_accepted: StrictBool
@@ -21,6 +22,7 @@ class EligibilityAcceptance(APIModel):
             raise ValueError("You must be 18 or older and explicitly accept the Terms")
         if self.terms_version != TERMS_VERSION:
             raise ValueError("Review and accept the current Terms version")
+
         return self
 
 
@@ -31,9 +33,12 @@ class RegistrationCheck(EligibilityAcceptance):
     @classmethod
     def valid_email(cls, value):
         import re
+
         value = value.strip().lower()
+
         if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value):
             raise ValueError("Enter a valid email address")
+
         return value
 
 
@@ -49,11 +54,14 @@ class UserCompletion(EligibilityAcceptance):
             raise ValueError("Enter your registered name")
         if (self.role == "tutor") != (self.account_purpose == "tutor"):
             raise ValueError("Account purpose does not match role")
+
         try:
             ZoneInfo(self.timezone)
         except (ZoneInfoNotFoundError, ValueError):
             raise ValueError("Select a valid time zone")
+
         return self
+
 
 class UserCreate(UserCompletion):
     # Compatibility endpoint: these claims are checked, never trusted as authority.

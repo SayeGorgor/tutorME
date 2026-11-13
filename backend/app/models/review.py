@@ -3,12 +3,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
+
 class Review(Base):
     __tablename__ = "reviews"
 
     id: Mapped[int] = mapped_column(
-        BigInteger, 
-        primary_key=True, 
+        BigInteger,
+        primary_key=True,
         autoincrement=True,
     )
 
@@ -31,18 +32,11 @@ class Review(Base):
     )
 
     author: Mapped["User"] = relationship(
-        foreign_keys=[author_id],
-        back_populates="reviews_written"
-    )
-    
-    tutor: Mapped["User"] = relationship(
-        foreign_keys=[tutor_id],
-        back_populates="reviews_received"
+        foreign_keys=[author_id], back_populates="reviews_written"
     )
 
+    tutor: Mapped["User"] = relationship(foreign_keys=[tutor_id], back_populates="reviews_received")
+
     created_at: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False,
-        default="now()",
-        server_default="now()"
+        String(255), nullable=False, default="now()", server_default="now()"
     )

@@ -1,5 +1,21 @@
 # Testing, responsive design and reliability
 
+## Source formatting
+
+Frontend formatting uses pinned Prettier. From `frontend`, install dependencies with `npm ci`,
+then run `npm run format` to format maintained source or `npm run format:check` to check it.
+Generated files, assets, environment files and lockfiles are excluded.
+
+Backend formatting uses pinned Ruff as a development-only tool. From `backend`, install it into
+your virtual environment with `python -m pip install -r requirements-dev.txt`, then run
+`python -m ruff format app scripts tests integration alembic` or
+`python -m ruff format --check app scripts tests integration alembic`.
+These commands only format source; they do not run migrations or connect to the database.
+Formatting does not sort imports or apply lint fixes. Run the separate validation commands below
+after making changes.
+The original `b292ed7c70dc` migration is excluded from Ruff to preserve its revision-header
+docstring exactly; the other maintained migrations are formatted normally.
+
 ## Automated CI implementation
 
 The [workflow](../.github/workflows/ci.yml) defines three independent Ubuntu jobs on push, pull request and manual dispatch: frontend checks, backend isolated checks, and PostgreSQL migrated integration. It uses Node 26 LTS and Python 3.14, synthetic settings and no repository secrets. Workflow execution is recorded below; job definitions are not evidence that every step passed.

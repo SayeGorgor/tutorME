@@ -31,7 +31,12 @@ class LocationPreferences(APIModel):
     service_area_id: str | None = Field(default=None, max_length=80)
     place_id: str | None = Field(default=None, max_length=255)
     travel_radius_miles: float = Field(default=25, ge=0, le=100, allow_inf_nan=False)
-    meeting_preferences: Literal["Public libraries", "Public cafes", "Public campus spaces", "Public libraries or cafes"] | None = None
+    meeting_preferences: (
+        Literal[
+            "Public libraries", "Public cafes", "Public campus spaces", "Public libraries or cafes"
+        ]
+        | None
+    ) = None
     public_area_consent: bool = False
 
     @model_validator(mode="after")
@@ -39,7 +44,10 @@ class LocationPreferences(APIModel):
         if not self.online_enabled and not self.in_person_enabled:
             raise ValueError("Enable at least one tutoring mode")
         if self.in_person_enabled and (not self.service_area_id or not self.public_area_consent):
-            raise ValueError("In-person tutoring requires a service area and consent to public area display")
+            raise ValueError(
+                "In-person tutoring requires a service area and consent to public area display"
+            )
+
         return self
 
 
@@ -59,11 +67,13 @@ class TutorSearch(APIModel):
             raise ValueError("Minimum price cannot exceed maximum price")
         if self.mode == "in-person" and not self.area_id:
             raise ValueError("Select a city or ZIP service area for in-person searches")
+
         return self
 
 
 class SelectedPlaceArea(APIModel):
     """Transient selection hints only; never inserted into the geographic catalog."""
+
     country: Literal["US"]
     city: str | None = Field(default=None, min_length=1, max_length=100)
     region: str | None = Field(default=None, pattern=r"^[A-Z]{2}$")
@@ -73,4 +83,5 @@ class SelectedPlaceArea(APIModel):
     def require_area(self):
         if not self.postal_code and not (self.city and self.city.strip() and self.region):
             raise ValueError("Choose a city and state or a five-digit ZIP code")
+
         return self

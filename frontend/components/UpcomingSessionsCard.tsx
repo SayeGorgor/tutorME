@@ -1,2 +1,5 @@
 import BookingList from "./BookingList";
-export default function UpcomingSessionsCard() { return <BookingList compact />; }
+
+export default function UpcomingSessionsCard() {
+  return <BookingList compact />;
+}

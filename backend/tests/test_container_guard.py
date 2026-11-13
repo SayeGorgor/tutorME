@@ -1,9 +1,15 @@
 """No database calls; rejection tests for the independent service guard."""
+
 import unittest
 from unittest.mock import Mock, patch
 from sqlalchemy.engine import make_url
 
-from scripts.container_guard import approved_container, container_engine, verify_container, verify_migration_connection
+from scripts.container_guard import (
+    approved_container,
+    container_engine,
+    verify_container,
+    verify_migration_connection,
+)
 
 
 class ContainerGuardTests(unittest.TestCase):
@@ -16,8 +22,10 @@ class ContainerGuardTests(unittest.TestCase):
 
     def test_supplied_migration_connection_rejects_other_targets_before_sql(self):
         connection = Mock()
-        for url in ("postgresql+psycopg://test:test@hosted.example/live",
-                    "postgresql+psycopg://tutorme_ci:synthetic-container-only@127.0.0.1:54322/tutorme_ci"):
+        for url in (
+            "postgresql+psycopg://test:test@hosted.example/live",
+            "postgresql+psycopg://tutorme_ci:synthetic-container-only@127.0.0.1:54322/tutorme_ci",
+        ):
             connection.engine.url = make_url(url)
             with self.assertRaises(RuntimeError):
                 verify_migration_connection(connection, self.environment())
@@ -35,16 +43,25 @@ class ContainerGuardTests(unittest.TestCase):
         engine.dispose()
 
     def environment(self):
-        return dict(GITHUB_ACTIONS="true", TUTORME_CONTAINER_TESTS="1",
-                    GITHUB_RUN_ID="123", GITHUB_RUN_ATTEMPT="1", TUTORME_CONTAINER_PORT="54321")
+        return dict(
+            GITHUB_ACTIONS="true",
+            TUTORME_CONTAINER_TESTS="1",
+            GITHUB_RUN_ID="123",
+            GITHUB_RUN_ATTEMPT="1",
+            TUTORME_CONTAINER_PORT="54321",
+        )
 
     def test_requires_every_opt_in_and_valid_identity(self):
         env = self.environment()
         for key in env:
             with self.subTest(key=key), self.assertRaises(RuntimeError):
                 approved_container({k: v for k, v in env.items() if k != key})
-        for key, value in (("TUTORME_CONTAINER_PORT", "5432/remote"), ("TUTORME_CONTAINER_PORT", "0"),
-                           ("GITHUB_RUN_ID", "';DROP DATABASE x"), ("GITHUB_ACTIONS", "false")):
+        for key, value in (
+            ("TUTORME_CONTAINER_PORT", "5432/remote"),
+            ("TUTORME_CONTAINER_PORT", "0"),
+            ("GITHUB_RUN_ID", "';DROP DATABASE x"),
+            ("GITHUB_ACTIONS", "false"),
+        ):
             with self.assertRaises(RuntimeError):
                 approved_container({**env, key: value})
 
@@ -57,8 +74,11 @@ class ContainerGuardTests(unittest.TestCase):
 
     def test_server_identity_and_empty_database_required(self):
         target = approved_container(self.environment())
-        for actual in (("production", "tutorme_ci", target.marker),
-                       ("tutorme_ci", "wrong", target.marker), ("tutorme_ci", "tutorme_ci", None)):
+        for actual in (
+            ("production", "tutorme_ci", target.marker),
+            ("tutorme_ci", "wrong", target.marker),
+            ("tutorme_ci", "tutorme_ci", None),
+        ):
             conn = Mock()
             conn.scalar.return_value = "on"
             conn.execute.return_value.one.return_value = actual

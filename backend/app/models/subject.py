@@ -5,22 +5,31 @@ from app.db.base import Base
 
 from enum import Enum
 
+
 class SubjectCategory(str, Enum):
     MATH = "Math"
+
     COMPUTER_SCIENCE = "Computer Science"
+
     SAT_PREP = "SAT Prep"
+
     ACT_PREP = "ACT Prep"
+
     ENGLISH = "English"
+
     SCIENCE = "Science"
+
     SOCIAL_STUDIES = "Social Studies"
+
     OTHER = "Other"
+
 
 class Subject(Base):
     __tablename__ = "subjects"
 
     id: Mapped[int] = mapped_column(
-        BigInteger, 
-        primary_key=True, 
+        BigInteger,
+        primary_key=True,
         autoincrement=True,
     )
 
@@ -30,18 +39,13 @@ class Subject(Base):
     )
 
     created_at: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False,
-        default="now()",
-        server_default="now()"
+        String(255), nullable=False, default="now()", server_default="now()"
     )
 
     category: Mapped[SubjectCategory] = mapped_column(
         SQLEnum(
-            SubjectCategory, 
+            SubjectCategory,
             name="subject_category",
-            values_callable=lambda enum: [
-                member.value for member in enum
-            ],
+            values_callable=lambda enum: [member.value for member in enum],
         ),
     )

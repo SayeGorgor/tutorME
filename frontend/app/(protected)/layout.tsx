@@ -4,19 +4,12 @@ import { UserProvider } from "@/lib/context/UserContext";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProtectedLayout({ 
-    children 
-}: { 
-    children: React.ReactNode 
-}) {
-    const { data: sessionData } = await auth.getSession();
-    if (!sessionData?.session || !sessionData?.user) {
-        redirect("/");
-    }
+export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
+  const { data: sessionData } = await auth.getSession();
 
-    return (
-        <UserProvider>
-            {children}
-        </UserProvider>
-    )
-};
+  if (!sessionData?.session || !sessionData?.user) {
+    redirect("/");
+  }
+
+  return <UserProvider>{children}</UserProvider>;
+}

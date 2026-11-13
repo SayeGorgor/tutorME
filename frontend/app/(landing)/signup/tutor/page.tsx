@@ -1,5 +1,5 @@
 import SignupForm from "@/components/SignupForm";
 
 export default function TutorSignupPage() {
-    return <SignupForm role="tutor" />;
+  return <SignupForm role="tutor" />;
 }

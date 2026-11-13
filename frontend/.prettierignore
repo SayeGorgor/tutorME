@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.npm-cache/
+build/
+out/
+coverage/
+public/
+generated/
+**/generated/**
+**/*.generated.*
+**/*.d.ts
+**/*.min.*
+**/*.tsbuildinfo
+package-lock.json
+*.lock
+.env*

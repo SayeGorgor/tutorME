@@ -22,7 +22,9 @@ NEON_AUTH_BASE_URL = settings.neon_auth_base_url
 NEON_AUTH_JWKS_URL = settings.neon_auth_jwks_url
 
 parsed_neon_auth_base_url = urlparse(NEON_AUTH_BASE_URL)
-NEON_AUTH_ISSUER_AUDIENCE = f"{parsed_neon_auth_base_url.scheme}://{parsed_neon_auth_base_url.netloc}"
+NEON_AUTH_ISSUER_AUDIENCE = (
+    f"{parsed_neon_auth_base_url.scheme}://{parsed_neon_auth_base_url.netloc}"
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +34,10 @@ security = HTTPBearer()
 # individual keys indefinitely or use stale keys after the set expires.
 jwks_client = PyJWKClient(NEON_AUTH_JWKS_URL, timeout=5, lifespan=300, cache_keys=False)
 
+
 def get_identity(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
+
     if not re.fullmatch(r"[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", token):
         raise HTTPException(status_code=401, detail="Invalid token")
 
@@ -42,40 +46,32 @@ def get_identity(credentials: HTTPAuthorizationCredentials = Depends(security)):
         # is untrusted; the allowlist below remains fixed during verification.
         if jwt.get_unverified_header(token).get("alg") != "EdDSA":
             raise jwt.InvalidAlgorithmError("Unsupported signing algorithm")
+
         signing_key = jwks_client.get_signing_key_from_jwt(token)
 
         payload = jwt.decode(
-            token, 
-            signing_key.key, 
+            token,
+            signing_key.key,
             algorithms=["EdDSA"],
             issuer=NEON_AUTH_ISSUER_AUDIENCE,
             audience=NEON_AUTH_ISSUER_AUDIENCE,
             options={"require": ["exp", "iss", "aud", "sub"]},
-            leeway=10
+            leeway=10,
         )
-    
+
     except jwt.ExpiredSignatureError:
         logger.info("Authentication token expired")
-        raise HTTPException(
-            status_code=401, 
-            detail="Token has expired"
-        )
-    
+        raise HTTPException(status_code=401, detail="Token has expired")
+
     except (jwt.InvalidTokenError, jwt.PyJWKClientError, jwt.PyJWKError, ValueError, TypeError):
         logger.info("Authentication token rejected")
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid token"
-        )
-    
+        raise HTTPException(status_code=401, detail="Invalid token")
+
     auth_id = payload.get("sub")
 
     if not isinstance(auth_id, str) or not auth_id.strip():
         logger.info("Authentication subject rejected")
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid Auth ID"
-        )
+        raise HTTPException(status_code=401, detail="Invalid Auth ID")
 
     return payload
 
@@ -84,19 +80,18 @@ def get_current_user(identity: dict = Depends(get_identity), db: Session = Depen
     user = db.query(User).filter(User.auth_id == identity["sub"]).first()
 
     if not user:
-        raise HTTPException(status_code=404, detail={
-            "code": "REGISTRATION_INCOMPLETE",
-            "message": "Your sign-in account exists. Finish account setup to create your TutorME profile.",
-        })
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "REGISTRATION_INCOMPLETE",
+                "message": "Your sign-in account exists. Finish account setup to create your TutorME profile.",
+            },
+        )
 
     return user
 
-def haversine_distance(
-    lat1: float,
-    lon1: float,
-    lat2: float,
-    lon2: float
-) -> float:
+
+def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     radius = 3958.8  # Earth's radius in miles
 
     lat1 = radians(lat1)
@@ -107,10 +102,7 @@ def haversine_distance(
     dlat = lat2 - lat1
     dlon = lon2 - lon1
 
-    a = (
-        sin(dlat / 2) ** 2
-        + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-    )
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
 
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
 

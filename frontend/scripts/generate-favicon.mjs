@@ -6,7 +6,9 @@ import { readFile, writeFile } from "node:fs/promises";
 const source = await readFile(new URL("../public/brand/tutorme-mark.svg", import.meta.url));
 await writeFile(new URL("../app/icon.svg", import.meta.url), source);
 const sizes = [16, 32, 48];
-const images = await Promise.all(sizes.map(size => sharp(source).resize(size, size).png().toBuffer()));
+const images = await Promise.all(
+  sizes.map((size) => sharp(source).resize(size, size).png().toBuffer()),
+);
 const header = Buffer.alloc(6 + 16 * sizes.length);
 header.writeUInt16LE(1, 2);
 header.writeUInt16LE(sizes.length, 4);

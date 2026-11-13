@@ -4,6 +4,7 @@ from typing import Literal
 from pydantic import AwareDatetime, Field
 from app.schemas.base import APIModel
 
+
 class BookingCreate(APIModel):
     model_config = {**APIModel.model_config, "extra": "forbid"}
     subject_id: int = Field(gt=0)
@@ -14,12 +15,15 @@ class BookingCreate(APIModel):
     starts_at: AwareDatetime
     idempotency_key: str = Field(min_length=16, max_length=80, pattern=r"^[a-zA-Z0-9-]+$")
 
+
 class BookingAction(APIModel):
     action: Literal["confirm", "decline", "cancel", "complete"]
+
 
 class MeetingDetails(APIModel):
     details: str = Field(min_length=1, max_length=1000)
     public_meeting_confirmed: bool = False
+
 
 class BookingResponse(APIModel):
     id: str

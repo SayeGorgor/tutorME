@@ -1,4 +1,5 @@
 """Preserve booking subject and exact request-time quotes; no inferred backfill."""
+
 from alembic import op
 import sqlalchemy as sa
 

@@ -8,12 +8,15 @@ from app.services.policies import require_policies
 
 router = APIRouter(prefix="/policies", tags=["Policies"])
 
+
 @router.get("")
 def policies():
     return policy_info()
+
 
 @router.post("/registration-check")
 def registration_check(data: RegistrationCheck, db: Session = Depends(get_db)):
     require_policies()
     require_unused_signup_email(db, data.email)
+
     return {"eligible": True}

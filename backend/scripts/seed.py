@@ -3,6 +3,7 @@ from app.models.user import User, UserRole
 from app.models.subject import Subject, SubjectCategory
 from app.models.tutor_profile import TutorProfile
 
+
 def seed_subjects(db: SessionLocal):
     subjects = [
         {"name": "Algebra", "category": SubjectCategory.MATH},
@@ -40,14 +41,11 @@ def seed_subjects(db: SessionLocal):
     ]
 
     for subject in subjects:
-        existing = (
-            db.query(Subject)
-            .filter(Subject.name == subject["name"])
-            .first()
-        )
+        existing = db.query(Subject).filter(Subject.name == subject["name"]).first()
 
         if not existing:
             db.add(Subject(name=subject["name"], category=subject["category"]))
+
 
 def seed_tutor_profiles(db: SessionLocal):
     """Only create explicitly fictional records in a reserved non-login namespace.
@@ -62,13 +60,27 @@ def seed_tutor_profiles(db: SessionLocal):
         if existing:
             # Fail closed if the reserved identifier is unexpectedly associated with a real profile.
             if not existing.tutor_profile or not existing.tutor_profile.is_demo:
-                raise RuntimeError("Reserved demo identifier already exists without demo provenance; review manually")
+                raise RuntimeError(
+                    "Reserved demo identifier already exists without demo provenance; review manually"
+                )
             continue
-        user = User(auth_id=auth_id, email=f"{slug}@example.invalid", first_name=first, last_name=last,
-                    role=UserRole.TUTOR, timezone="America/New_York")
-        profile = TutorProfile(user=user, intro="Fictional demonstration tutor. Not available for real appointments.",
+        user = User(
+            auth_id=auth_id,
+            email=f"{slug}@example.invalid",
+            first_name=first,
+            last_name=last,
+            role=UserRole.TUTOR,
+            timezone="America/New_York",
+        )
+        profile = TutorProfile(
+            user=user,
+            intro="Fictional demonstration tutor. Not available for real appointments.",
             bio="Sample profile created only to demonstrate the TutorME interface. This is not a real tutor.",
-            price=35, is_demo=True, online_enabled=True, in_person_enabled=False)
+            price=35,
+            is_demo=True,
+            online_enabled=True,
+            in_person_enabled=False,
+        )
         subject = db.query(Subject).filter(Subject.name == subject_name).first()
         if subject:
             profile.subjects = [subject]
@@ -86,10 +98,12 @@ def seed(include_demo_tutors=False):
             db.rollback()
             raise
 
+
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Explicit catalog/demo seed; never run automatically")
+
+    parser = argparse.ArgumentParser(
+        description="Explicit catalog/demo seed; never run automatically"
+    )
     parser.add_argument("--include-demo-tutors", action="store_true")
     seed(parser.parse_args().include_demo_tutors)
-
-        

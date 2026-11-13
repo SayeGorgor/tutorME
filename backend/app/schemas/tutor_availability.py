@@ -4,6 +4,7 @@ from pydantic import Field, model_validator
 from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+
 class TutorAvailabilityBase(APIModel):
     type: Literal["weekly", "custom"]
     day_of_the_week: int | None = None
@@ -17,22 +18,30 @@ class TutorAvailabilityBase(APIModel):
         if self.start_time >= self.end_time or self.start_time % 30 or self.end_time % 30:
             raise ValueError("Use increasing half-hour time boundaries")
         if self.type == "weekly":
-            if self.date is not None or self.day_of_the_week is None or not 0 <= self.day_of_the_week <= 6:
+            if (
+                self.date is not None
+                or self.day_of_the_week is None
+                or not 0 <= self.day_of_the_week <= 6
+            ):
                 raise ValueError("Weekly availability requires one weekday (0-6), without a date")
         elif self.day_of_the_week is not None or not self.date:
             raise ValueError("Custom availability requires a date without a weekday")
         else:
             date.fromisoformat(self.date)
+
         try:
             ZoneInfo(self.timezone)
         except (ZoneInfoNotFoundError, ValueError):
             raise ValueError("Invalid time zone")
+
         return self
+
 
 class TutorAvailability(TutorAvailabilityBase):
     id: int
     tutor_id: int
     created_at: datetime
+
 
 class TutorAvailabilitySummary(APIModel):
     id: int
@@ -44,8 +53,10 @@ class TutorAvailabilitySummary(APIModel):
     end_time: int
     timezone: str
 
+
 class TutorAvailabilityCreate(APIModel):
     availability: list[TutorAvailabilityBase] = Field(max_length=336)
+
 
 class TutorAvailabilityResponse(APIModel):
     availability: list[TutorAvailability]

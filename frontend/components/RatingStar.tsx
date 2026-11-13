@@ -12,11 +12,7 @@ export default function RatingStar({ filled = false, height = 4, width = 4 }: St
         width: `${width * 0.25}rem`,
         height: `${height * 0.25}rem`,
       }}
-      className={`${
-        filled
-          ? "fill-black stroke-black"
-          : "fill-none stroke-black"
-      }`}
+      className={`${filled ? "fill-black stroke-black" : "fill-none stroke-black"}`}
     >
       <path
         strokeWidth="2"
