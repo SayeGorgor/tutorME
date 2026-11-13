@@ -9,7 +9,7 @@ import type { UserRole } from "@/lib/types";
 import MobileMenu from "./MobileMenu";
 import TutorMELogo from "./TutorMELogo";
 
-export default function LandingNav() {
+function SessionLandingNav() {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, isPending } = authClient.useSession();
@@ -61,12 +61,7 @@ export default function LandingNav() {
       } catch { setMessage("Could not log out. Please try again."); }
       finally { setSigningOut(false); }
     }}>{signingOut ? "Logging out..." : "Log out"}</button>
-  </> : <>
-    <Link href="/#how-it-works" className="rounded-lg px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-800">How it works</Link>
-    <Link href="/signup/tutor" className="rounded-lg px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-800">Become a tutor</Link>
-    <Link href="/login" className="rounded-lg px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50">Log in</Link>
-    <Link href="/signup" className="rounded-xl bg-blue-800 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-blue-900">Get started <span aria-hidden="true">?</span></Link>
-  </>;
+  </> : <PublicLinks />;
   return <nav aria-label="Main navigation" className="landing-nav relative z-30 flex w-full flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 bg-white px-5 py-4 sm:px-8 lg:px-12">
     <Link href={logoHref} aria-label={subject ? "tutorME dashboard" : "tutorME home"} className="flex min-h-11 items-center gap-2 text-2xl font-bold tracking-tighter text-slate-900 lg:static">
       <TutorMELogo />
@@ -76,4 +71,26 @@ export default function LandingNav() {
     {subject && currentAccount?.error && <p role="status" className="w-full text-sm text-slate-600">Account links could not load. <button type="button" className="font-semibold text-blue-700 underline" onClick={() => setRetry(value => value + 1)}>Retry</button> or <Link href="/login" className="font-semibold text-blue-700 underline">sign in again</Link>.</p>}
     {message && <p role="alert" className="w-full text-sm text-red-600">{message}</p>}
   </nav>;
+}
+
+function PublicLinks() {
+  return <>
+    <Link href="/#how-it-works" className="rounded-lg px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-800">How it works</Link>
+    <Link href="/signup/tutor" className="rounded-lg px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-800">Become a tutor</Link>
+    <Link href="/login" className="rounded-lg px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50">Log in</Link>
+    <Link href="/signup" className="rounded-xl bg-blue-800 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-blue-900">Get started <span aria-hidden="true">?</span></Link>
+  </>;
+}
+
+function PublicLandingNav() {
+  return <nav aria-label="Main navigation" className="landing-nav relative z-30 flex w-full flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 bg-white px-5 py-4 sm:px-8 lg:px-12">
+    <Link href="/" aria-label="tutorME home" className="flex min-h-11 items-center gap-2 text-2xl font-bold tracking-tighter text-slate-900 lg:static"><TutorMELogo /></Link>
+    <div className="hidden items-center gap-1 lg:flex"><PublicLinks /></div>
+    <div className="min-w-0 grow basis-24 lg:hidden"><MobileMenu><PublicLinks /></MobileMenu></div>
+  </nav>;
+}
+
+export default function LandingNav() {
+  const pathname = usePathname();
+  return pathname === "/" ? <PublicLandingNav /> : <SessionLandingNav />;
 }
