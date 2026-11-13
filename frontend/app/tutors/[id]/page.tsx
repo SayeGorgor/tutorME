@@ -1,5 +1,6 @@
 'use client';
 import { subjectSummary } from "@/lib/subject-summary";
+import { getInitialWeeklyTimePage } from "@/lib/initial-weekly-time-page";
 import TutorLocationBadges from "@/components/TutorLocationBadges";
 
 import { useState, useEffect } from "react";
@@ -48,13 +49,17 @@ export default function TutorProfilePage({
             i * 6 + 6
         )
     );
+    const timePageCount = timePages.length;
     
     useEffect(() => {
+        let cancelled = false;
         const fetchTutorProfile = async () => {
             const { id } = await params;
+            if (cancelled) return;
             setIsLoading(true);
 
             const { data: tutorProfileData, error } = await getTutorByUserId(id);
+            if (cancelled) return;
             if (error) {
                 setHasError(true);
                 setSysMessage(error.message);
@@ -63,13 +68,15 @@ export default function TutorProfilePage({
             }
             
             setTutorProfile(tutorProfileData ?? null);
+            setCurrentTimePage(getInitialWeeklyTimePage(tutorProfileData?.availability ?? [], timePageCount));
             setHasError(false);
             setSysMessage("");
             setIsLoading(false);
         };
         fetchTutorProfile();
+        return () => { cancelled = true; };
 
-    }, [params]);
+    }, [params, timePageCount]);
 
     return (
         <div className="location-ui mx-auto flex w-full max-w-[100rem] min-w-0 flex-col gap-2 p-4 sm:p-6 lg:p-8 [overflow-wrap:anywhere]">

@@ -14,15 +14,24 @@ const PAGE_SIZE = 20;
 
 export default function TutorsPage() {
   const params = useSearchParams();
-  return <TutorDiscovery key={params.toString()} query={params.toString()} />;
+  const [view, setView] = useState<"list" | "map">("list");
+  const [selectedArea, setSelectedArea] = useState<ServiceArea | null>(null);
+  return <TutorDiscovery key={params.toString()} query={params.toString()} view={view} setView={setView} selectedArea={selectedArea} setSelectedArea={setSelectedArea} />;
 }
-function TutorDiscovery({ query }: { query: string }) {
+function TutorDiscovery({ query, view, setView, selectedArea, setSelectedArea }: {
+  query: string;
+  view: "list" | "map";
+  setView: (view: "list" | "map") => void;
+  selectedArea: ServiceArea | null;
+  setSelectedArea: (area: ServiceArea | null) => void;
+}) {
   const router = useRouter();
   const initial = new URLSearchParams(query);
   const [mode, setMode] = useState(initial.get("mode") || initial.get("sessionType") || "all");
   const [subject, setSubject] = useState(initial.get("subject") || "");
-  const [area, setArea] = useState<ServiceArea | null>(null);
-  const [areaReady, setAreaReady] = useState(!initial.get("areaId"));
+  const retainedArea = view === "map" && selectedArea?.id === initial.get("areaId") ? selectedArea : null;
+  const [area, setArea] = useState<ServiceArea | null>(retainedArea);
+  const [areaReady, setAreaReady] = useState(!initial.get("areaId") || !!retainedArea);
   const [radius, setRadius] = useState(initial.get("radius") || "25");
   const [minPrice, setMinPrice] = useState(initial.get("minPrice") || "0");
   const [maxPrice, setMaxPrice] = useState(initial.get("maxPrice") || "200");
@@ -30,7 +39,6 @@ function TutorDiscovery({ query }: { query: string }) {
   const [result, setResult] = useState<TutorSearchResponse | null>(null);
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
-  const [view, setView] = useState<"list" | "map">("list");
   useEffect(() => {
     let active = true;
     const params = new URLSearchParams(query);
@@ -44,6 +52,7 @@ function TutorDiscovery({ query }: { query: string }) {
     if (areaId) apiFetch<ServiceArea>(`/api/locations/areas/${encodeURIComponent(areaId)}`).then(response => { if (active) { setArea(response.data || null); setAreaReady(true); if (response.error) setFormError("The selected service area is no longer supported. Choose another area."); } });
     return () => { active = false; };
   }, [query]);
+  useEffect(() => { setSelectedArea(area); }, [area, setSelectedArea]);
   const hasAreaFilter = !!initial.get("areaId");
   const paginate = (offset: number) => { const params = new URLSearchParams(query); params.set("offset", String(offset)); router.push(`/tutors?${params}`); };
   return <div className="location-ui mx-auto grid w-full max-w-[100rem] min-w-0 flex-1 grid-cols-1 items-start gap-6 p-4 sm:p-6 lg:grid-cols-[17rem_minmax(0,1fr)] lg:p-8">
@@ -77,7 +86,7 @@ function TutorDiscovery({ query }: { query: string }) {
 
       <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="mb-1 hidden text-xs font-semibold tracking-widest text-blue-700 lg:block">YOUR NEXT STEP FORWARD</p><h1 className="text-3xl font-semibold">Find your next tutor</h1><p className="mt-2 text-sm text-slate-600">{result ? `${result.total} tutors match your search` : error ? "Search could not load" : "Searching tutors..."}</p></div><div className="flex rounded-xl border border-slate-200 bg-white p-1" aria-label="Results view"><button aria-pressed={view === "list"} onClick={() => setView("list")} className={`rounded-lg px-4 py-2 text-sm font-semibold ${view === "list" ? "bg-blue-100 text-blue-800" : "text-slate-600"}`}>List View</button><button aria-pressed={view === "map"} onClick={() => setView("map")} className={`rounded-lg px-4 py-2 text-sm font-semibold ${view === "map" ? "bg-blue-100 text-blue-800" : "text-slate-600"}`}>Map View</button></div></div>
       <p className="text-sm text-slate-500">Lesson offerings are shown here. Appointment availability is not confirmed.</p>
-      {error ? <p role="alert" className="surface rounded-xl bg-white p-5 text-red-700">{error}</p> : !result ? <p role="status">Loading tutors...</p> : view === "map" ? hasAreaFilter && initial.get("mode") !== "online" ? <TutorMap tutors={result.items} /> : <p role="status" className="surface rounded-2xl bg-white p-6">Choose a city/ZIP code and apply All tutors or In-person tutoring to explore nearby service areas on the map.</p> : result.items.length === 0 ? <p role="status" className="surface rounded-2xl bg-white p-6">No tutors match these filters. Try a larger radius, another subject, or online lessons.</p> : <ul className="flex flex-col gap-4">{result.items.map(tutor => <li key={tutor.id}><TutorCard tutor={tutor} /></li>)}</ul>}
+      {error ? <p role="alert" className="surface rounded-xl bg-white p-5 text-red-700">{error}</p> : !result ? view === "map" ? <div role="status" aria-live="polite" className="surface flex h-[65dvh] min-h-80 flex-col items-center justify-center gap-3 rounded-2xl bg-white p-6 text-center"><span aria-hidden="true" className="h-8 w-8 animate-spin rounded-full border-4 border-blue-100 border-t-blue-700 motion-reduce:animate-none" /><p className="text-sm text-slate-600">Updating map results...</p></div> : <p role="status">Loading tutors...</p> : view === "map" ? hasAreaFilter && initial.get("mode") !== "online" ? <TutorMap tutors={result.items} /> : <p role="status" className="surface rounded-2xl bg-white p-6">Choose a city/ZIP code and apply All tutors or In-person tutoring to explore nearby service areas on the map.</p> : result.items.length === 0 ? <p role="status" className="surface rounded-2xl bg-white p-6">No tutors match these filters. Try a larger radius, another subject, or online lessons.</p> : <ul className="flex flex-col gap-4">{result.items.map(tutor => <li key={tutor.id}><TutorCard tutor={tutor} /></li>)}</ul>}
       {result && result.total > PAGE_SIZE && <nav aria-label="Search results pagination" className="flex flex-wrap items-center justify-between gap-3"><button disabled={result.offset === 0} onClick={() => paginate(Math.max(0, result.offset - PAGE_SIZE))} className="rounded-xl border px-4 py-3 text-sm">Previous</button><span className="text-sm">{result.offset + 1} - {Math.min(result.offset + result.limit, result.total)} of {result.total}</span><button disabled={result.offset + result.limit >= result.total} onClick={() => paginate(result.offset + PAGE_SIZE)} className="rounded-xl border px-4 py-3 text-sm">Next</button></nav>}
     </section>
   </div>;
